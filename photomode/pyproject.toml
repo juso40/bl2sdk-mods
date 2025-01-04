@@ -1,0 +1,16 @@
+[project]
+name = "photomode"
+version = "1"
+authors = [{ name = "juso" }]
+description = """\
+Simple Photo Mode.
+'Mousewheel Up/Down' to change the active modifier.
+Hold 'Shift' while scrolling to change the camera movement speed.
+Hold 'R' while scrolling to change the camera rotation.
+Hold 'F' while scrolling to change the camera FOV.
+"""
+
+
+[tool.sdkmod]
+name = "Photo Mode"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
