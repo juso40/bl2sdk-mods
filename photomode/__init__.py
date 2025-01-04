@@ -3,14 +3,14 @@ from functools import partial
 
 from mods_base import ENGINE, UObject, build_mod, get_pc
 from mods_base.keybinds import EInputEvent, keybind
+from unrealsdk.unreal import WeakPointer
 
 __version__: str
 __version_info__: tuple[int, ...]
 
 
 class PhotoModeState:
-    enabled: bool = False
-    pawn_backup: UObject | None = None
+    pawn_backup: WeakPointer = WeakPointer()
     active_modifier: Callable[[int], None] | None = None
 
 
@@ -18,19 +18,20 @@ class PhotoModeState:
 def toggle_photo_mode() -> None:
     world_info: UObject = ENGINE.GetCurrentWorldInfo()
     pc: UObject = get_pc()
-    if not PhotoModeState.enabled:
-        PhotoModeState.pawn_backup = pc.Pawn
-        pc.Unpossess()
-        pc.HideHUD()
-        pc.ServerSpectate()
-        world_info.bPlayersOnly = True
-    else:
-        pc.Possess(PhotoModeState.pawn_backup, True)
+    # If we have a pawn backup, we are in photo mode
+    if pawn := PhotoModeState.pawn_backup():
+        PhotoModeState.pawn_backup = WeakPointer()  # invalidate the backup
+        pc.Possess(pawn, True)
         pc.DisplayHUD()
         world_info.bPlayersOnly = False
         pc.Rotation.Roll = 0
         pc.SetFOV(pc.DefaultFOV)
-    PhotoModeState.enabled = not PhotoModeState.enabled
+    else:
+        PhotoModeState.pawn_backup = WeakPointer(pc.Pawn)
+        pc.Unpossess()
+        pc.HideHUD()
+        pc.ServerSpectate()
+        world_info.bPlayersOnly = True
 
 
 def camera_roll_modifier(val: int) -> None:
@@ -62,6 +63,11 @@ def _modifier(val: int) -> None:
         PhotoModeState.active_modifier(val)
 
 
+_switch_modifier_fov = partial(_switch_modifier, mod=camera_fov_modifier)
+_switch_modifier_roll = partial(_switch_modifier, mod=camera_roll_modifier)
+_switch_modifier_speed = partial(_switch_modifier, mod=camera_speed_modifier)
+
+
 mod = build_mod(
     keybinds=[
         toggle_photo_mode,
@@ -70,30 +76,21 @@ mod = build_mod(
         keybind(
             "Camera Speed",
             "LeftShift",
-            partial(
-                _switch_modifier,
-                mod=camera_speed_modifier,
-            ),
+            _switch_modifier_speed,
             is_rebindable=False,
             event_filter=None,
         ),
         keybind(
             "Camera Roll",
             "R",
-            partial(
-                _switch_modifier,
-                mod=camera_roll_modifier,
-            ),
+            _switch_modifier_roll,
             is_rebindable=False,
             event_filter=None,
         ),
         keybind(
             "Camera FOV",
             "F",
-            partial(
-                _switch_modifier,
-                mod=camera_fov_modifier,
-            ),
+            _switch_modifier_fov,
             is_rebindable=False,
             event_filter=None,
         ),
