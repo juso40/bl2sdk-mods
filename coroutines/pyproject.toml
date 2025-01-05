@@ -1,0 +1,12 @@
+[project]
+name = "coroutines"
+version = "1"
+authors = [{ name = "juso" }]
+description = """\
+A library that adds simple tick and draw coroutines.
+"""
+
+
+[tool.sdkmod]
+name = "coroutines"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }

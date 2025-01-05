@@ -31,6 +31,7 @@ ignore = [
     "E713",
     "PLR2004",
     "N999",
+    "ANN401",
 
     # handled by black
     "E1",
