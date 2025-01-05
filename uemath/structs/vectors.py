@@ -46,16 +46,18 @@ class Vector:
                 self.x = data.x
                 self.y = data.y
                 self.z = data.z
-            elif cast(UEVector, data).X is not None:  # Try to get the values from a UE3 Vector
-                _data: UEVector = cast(UEVector, data)
-                self.x = _data.X
-                self.y = _data.Y
-                self.z = _data.Z
-            elif cast(UERotator, data).Pitch is not None:  # Try to get the values from a UE3 Rotator
-                vec: Vector = cast("Vector", r.Rotator(data).to_vector())
-                self.x = vec.x
-                self.y = vec.y
-                self.z = vec.z
+            else:
+                try:
+                    # Try to get the values from a UE3 Vector
+                    self.x = data.X
+                    self.y = data.Y
+                    self.z = data.Z
+                except AttributeError:
+                     # Try to get the values from a UE3 Rotator
+                    vec: Vector = cast("Vector", r.Rotator(data).to_vector())
+                    self.x = vec.x
+                    self.y = vec.y
+                    self.z = vec.z
         if x is not None:
             self.x = x
         if y is not None:

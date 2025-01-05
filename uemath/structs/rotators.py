@@ -53,16 +53,17 @@ class Rotator:
                 self.pitch = data.pitch
                 self.yaw = data.yaw
                 self.roll = data.roll
-            elif cast(UERotator, data).Pitch is not None:
-                _data: UERotator = cast(UERotator, data)
-                self.pitch = data.Pitch
-                self.yaw = data.Yaw
-                self.roll = data.Roll
-            elif cast(UEVector, data).X is not None:
-                rot: Rotator = cast("Rotator", v.Vector(data).to_rotator())
-                self.pitch = rot.pitch
-                self.yaw = rot.yaw
-                self.roll = rot.roll
+            else:
+                try:
+                    _data: UERotator = cast(UERotator, data)
+                    self.pitch = data.Pitch
+                    self.yaw = data.Yaw
+                    self.roll = data.Roll
+                except AttributeError:
+                    rot: Rotator = cast("Rotator", v.Vector(data).to_rotator())
+                    self.pitch = rot.pitch
+                    self.yaw = rot.yaw
+                    self.roll = rot.roll
         if pitch is not None:
             self.pitch = pitch
         if yaw is not None:
@@ -132,7 +133,7 @@ class Rotator:
     def to_tuple(self) -> tuple[int, int, int]:
         """Return this Rotator as a tuple."""
         return int(self.pitch), int(self.yaw), int(self.roll)
-    
+
     def to_ue_rotator(self) -> UERotator:
         """Return this Rotator as a UE3 Rotator."""
         return unrealsdk.make_struct("Rotator", Pitch=self.pitch, Yaw=self.yaw, Roll=self.roll)
