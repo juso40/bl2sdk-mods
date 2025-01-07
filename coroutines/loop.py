@@ -177,13 +177,13 @@ def _post_render(
 
 
 add_hook(
-    "WillowGame.WillowGameViewportClient.PostRender",
+    "WillowGame.WillowGameViewportClient:PostRender",
     Type.POST_UNCONDITIONAL,
     "coroutines_post_render",
     _post_render,
 )
 add_hook(
-    "WillowGame.WillowGameViewportClient.Tick",
+    "WillowGame.WillowGameViewportClient:Tick",
     Type.POST_UNCONDITIONAL,
     "coroutines_tick_frame",
     _tick,
