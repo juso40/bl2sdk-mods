@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math as m
 from collections.abc import Iterator
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import unrealsdk
 
@@ -10,9 +10,10 @@ import uemath.structs.rotators as r
 from uemath.constants import RADIANS_TO_URU
 from uemath.umath import clamp
 
+if TYPE_CHECKING:
+    from uemath.uetypes import UERotator, UEVector  # type: ignore
+
 Scalar = float | int
-UERotator = unrealsdk.unreal.WrappedStruct
-UEVector = unrealsdk.unreal.WrappedStruct
 Sequence3 = tuple[Scalar, Scalar, Scalar] | list[Scalar]
 type Rot = r.Rotator | tuple[int, int, int]
 type Vec3 = "Vector" | tuple[Scalar, Scalar, Scalar]
@@ -206,7 +207,7 @@ class Vector:
 
     def to_ue_vector(self) -> UEVector:
         """Return a UE3 Vector representation of this vector."""
-        return unrealsdk.make_struct("Vector", X=self.x, Y=self.y, Z=self.z)
+        return cast("UEVector", unrealsdk.make_struct("Vector", X=self.x, Y=self.y, Z=self.z))
 
     @property
     def magnitude(self) -> float:

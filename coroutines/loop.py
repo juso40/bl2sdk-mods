@@ -177,8 +177,8 @@ def _post_render(
 
 
 add_hook(
-    "WillowGame.WillowGameViewportClient:PostRender",
-    Type.POST_UNCONDITIONAL,
+    "Engine.Interaction:PostRender",
+    Type.PRE,
     "coroutines_post_render",
     _post_render,
 )

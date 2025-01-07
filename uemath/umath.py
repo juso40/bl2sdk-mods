@@ -110,12 +110,12 @@ def world_to_screen(
         max(1.0, sum(a * b for a, b in zip(delta, axis_x, strict=False))),
     )
 
-    fov = player_fov
+    fov = player_fov 
 
     screen_center_x = canvas.ClipX / 2
     screen_center_y = canvas.ClipY / 2
-    vec_2d_x = screen_center_x + transformed[0] * (screen_center_x / m.tan(fov * PI / 360.0)) / transformed[2]
-    vec_2d_y = screen_center_y - transformed[1] * (screen_center_x / m.tan(fov * PI / 360.0)) / transformed[2]
+    vec_2d_x = screen_center_x + (transformed[0] * (screen_center_x / m.tan(fov * PI / 360.0)) / transformed[2])
+    vec_2d_y = screen_center_y + (-transformed[1] * (screen_center_x / m.tan(fov * PI / 360.0)) / transformed[2])
     return vec_2d_x, vec_2d_y
 
 

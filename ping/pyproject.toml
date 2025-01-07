@@ -1,0 +1,20 @@
+[project]
+name = "ping"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Ping the world!\n
+Allows you to ping various objects and locations to communicate with other players.\n
+Every player needs to have this mod installed to be able to receive pings.
+"""
+dependencies = [
+  "uemath >= 1.0",
+  "tracelib >= 1.0",
+]
+
+
+
+[tool.sdkmod]
+name = "Ping!"
+coop_support = "ClientSide"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }

@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import math as m
 from collections.abc import Iterator
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import unrealsdk
 
 import uemath.structs.vectors as v
 from uemath.constants import RADIANS_TO_URU, URU_90, URU_TO_RADIANS
 
-UERotator = unrealsdk.unreal.WrappedStruct
-UEVector = unrealsdk.unreal.WrappedStruct
+if TYPE_CHECKING:
+    from uemath.uetypes import UERotator, UEVector  # type: ignore
+
 Sequence3Int = tuple[int, int, int] | list[int]
 type Rot = "Rotator" | tuple[int, int, int]
 type Vec3 = v.Vector | tuple[float, float, float]
@@ -55,7 +56,6 @@ class Rotator:
                 self.roll = data.roll
             else:
                 try:
-                    _data: UERotator = cast(UERotator, data)
                     self.pitch = data.Pitch
                     self.yaw = data.Yaw
                     self.roll = data.Roll
@@ -136,7 +136,7 @@ class Rotator:
 
     def to_ue_rotator(self) -> UERotator:
         """Return this Rotator as a UE3 Rotator."""
-        return unrealsdk.make_struct("Rotator", Pitch=self.pitch, Yaw=self.yaw, Roll=self.roll)
+        return cast("UERotator", unrealsdk.make_struct("Rotator", Pitch=self.pitch, Yaw=self.yaw, Roll=self.roll))
 
     def get_axes(self) -> tuple[v.Vector, v.Vector, v.Vector]:
         """Get the axes of a Rotator.

@@ -1,6 +1,6 @@
 [project]
 name = "coroutines"
-version = "1"
+version = "1.0"
 authors = [{ name = "juso" }]
 description = """\
 A library that adds simple tick and draw coroutines.

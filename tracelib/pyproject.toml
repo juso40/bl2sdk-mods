@@ -1,12 +1,14 @@
 [project]
-name = "uemath"
-version = "1.0"
+name = "tracelib"
+version = "1"
 authors = [{ name = "juso" }]
 description = """\
-A math library with support for UEVectors and UERotators.
+A library that allows devs to easily trace ingame objects.
 """
-
+dependencies = [
+  "uemath >= 1.0",
+]
 
 [tool.sdkmod]
-name = "uemath"
+name = "tracelib"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
