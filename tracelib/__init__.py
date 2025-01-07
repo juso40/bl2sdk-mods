@@ -16,20 +16,25 @@ __version__: str
 __version_info__: tuple[int, ...]
 
 
-@cache
 def magic_trace_weapon() -> unreal.UObject:
-    weapons = list(find_all("WillowWeapon"))
-    default = weapons[0]
-    template = weapons[1]
+    @cache
+    def create_gun() -> unreal.WeakPointer:
+        weapons = list(find_all("WillowWeapon"))
+        default = weapons[0]
+        template = weapons[1]
 
-    weap = construct_object(
-        cls="WillowWeapon",
-        template_obj=template,
-        outer=default.Outer,
-        name="MagicTraceWeapon",
-    )
-    weap.ObjectFlags |= 0x4000
-    return weap
+        weap = construct_object(
+            cls="WillowWeapon",
+            template_obj=template,
+            outer=default.Outer,
+            name="MagicTraceWeapon",
+        )
+        return unreal.WeakPointer(weap)
+
+    if (wp := create_gun())():
+        return cast(unreal.UObject, wp())
+    create_gun.cache_clear()
+    return cast(unreal.UObject, create_gun()())
 
 
 def trace_from_player_pov(debug_trace: bool = False) -> ImpactInfo:

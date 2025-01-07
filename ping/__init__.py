@@ -37,9 +37,7 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
         screen_pos = canvas.Project(world_pos)
         x = clamp(screen_pos.X, 0, canvas.SizeX - 1)
         y = clamp(screen_pos.Y, 0, canvas.SizeY - 1)
-        print(screen_pos)
         if screen_pos.Z > 1:
-            print("Ping is behind the camera")
             x = 0 if x > canvas.SizeX / 2 else canvas.SizeX - 1
 
         _, text_size_x, text_size_y = canvas.TextSize(name, 1, 1)
