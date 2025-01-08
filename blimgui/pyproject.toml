@@ -1,0 +1,14 @@
+[project]
+name = "blimgui"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Library that provides a simple way to create and manage imgui windows.
+"""
+
+
+
+
+[tool.sdkmod]
+name = "blimgui"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
