@@ -10,7 +10,7 @@ import uemath.structs.vectors as v
 from uemath.constants import RADIANS_TO_URU, URU_90, URU_TO_RADIANS
 
 if TYPE_CHECKING:
-    from uemath.uetypes import UERotator, UEVector  # type: ignore
+    from common import Object  # type: ignore
 
 Sequence3Int = tuple[int, int, int] | list[int]
 type Rot = "Rotator" | tuple[int, int, int]
@@ -23,7 +23,7 @@ class Rotator:
 
     def __init__(
         self,
-        data: UERotator | UEVector | v.Vector | Rotator | Sequence3Int | None = None,
+        data: Object.Rotator | Object.Vector | v.Vector | Rotator | Sequence3Int | None = None,
         *,
         pitch: int | None = None,
         yaw: int | None = None,
@@ -134,9 +134,9 @@ class Rotator:
         """Return this Rotator as a tuple."""
         return int(self.pitch), int(self.yaw), int(self.roll)
 
-    def to_ue_rotator(self) -> UERotator:
+    def to_ue_rotator(self) -> Object.Rotator:
         """Return this Rotator as a UE3 Rotator."""
-        return cast("UERotator", unrealsdk.make_struct("Rotator", Pitch=self.pitch, Yaw=self.yaw, Roll=self.roll))
+        return cast("Object.Rotator", unrealsdk.make_struct("Rotator", Pitch=self.pitch, Yaw=self.yaw, Roll=self.roll))
 
     def get_axes(self) -> tuple[v.Vector, v.Vector, v.Vector]:
         """Get the axes of a Rotator.

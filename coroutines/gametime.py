@@ -1,12 +1,17 @@
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING, cast
 
 from mods_base import ENGINE
+
+if TYPE_CHECKING:
+    from common import WillowGameEngine
 
 __all__ = ["Time"]
 
 
 class _Time:
-
     def __init__(self) -> None:
         self._delta_time: float = 0
         self._time: float = 0
@@ -27,13 +32,13 @@ class _Time:
     def time_scale(self) -> float:
         """The scale at which the time is passing."""
         with contextlib.suppress(AttributeError, TypeError):
-            self._time_scale = ENGINE.GetCurrentWorldInfo().TimeDilation
+            self._time_scale = cast("WillowGameEngine", ENGINE).GetCurrentWorldInfo().TimeDilation
         return self._time_scale
 
     @time_scale.setter
     def time_scale(self, value: float) -> None:
         self._time_scale = value
-        ENGINE.GetCurrentWorldInfo().TimeDilation = value
+        cast("WillowGameEngine", ENGINE).GetCurrentWorldInfo().TimeDilation = value
 
     @property
     def unscaled_delta_time(self) -> float:

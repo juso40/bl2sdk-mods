@@ -11,7 +11,7 @@ from uemath.constants import RADIANS_TO_URU
 from uemath.umath import clamp
 
 if TYPE_CHECKING:
-    from uemath.uetypes import UERotator, UEVector  # type: ignore
+    from common import Object
 
 Scalar = float | int
 Sequence3 = tuple[Scalar, Scalar, Scalar] | list[Scalar]
@@ -24,7 +24,7 @@ class Vector:
 
     def __init__(
         self,
-        data: UEVector | UERotator | Vector | Sequence3 | r.Rotator | None = None,
+        data: Object.Vector | Object.Rotator | Vector | Sequence3 | r.Rotator | None = None,
         *,
         x: float | None = None,
         y: float | None = None,
@@ -205,9 +205,9 @@ class Vector:
         """Return a tuple representation of this vector."""
         return self.x, self.y, self.z
 
-    def to_ue_vector(self) -> UEVector:
+    def to_ue_vector(self) -> Object.Vector:
         """Return a UE3 Vector representation of this vector."""
-        return cast("UEVector", unrealsdk.make_struct("Vector", X=self.x, Y=self.y, Z=self.z))
+        return cast("Object.Vector", unrealsdk.make_struct("Vector", X=self.x, Y=self.y, Z=self.z))
 
     @property
     def magnitude(self) -> float:

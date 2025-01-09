@@ -1,15 +1,20 @@
-from typing import cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 
 from mods_base import CoopSupport, ValueOption, build_mod, get_pc
 from mods_base.keybinds import keybind
 from networking import add_network_functions, broadcast
-from unrealsdk import find_object, unreal
+from unrealsdk import find_object
 
 import tracelib
 import uemath
 from coroutines import PostRenderCoroutine, Time, start_coroutine_post_render
 from ping import settings
 from uemath.umath import clamp
+
+if TYPE_CHECKING:
+    from common import Canvas, Font, WillowPlayerController
 
 __version__: str
 __version_info__: tuple[int, ...]
@@ -29,8 +34,8 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
     bg_color = color[4:]
     while True:
         yield None
-        canvas: unreal.UObject = yield  # type: ignore
-        pc = get_pc()
+        canvas: Canvas = yield
+        pc = cast("WillowPlayerController", get_pc())
 
         loc = uemath.Vector(pc.Pawn.Location)
         loc.z += pc.Pawn.EyeHeight
@@ -41,7 +46,7 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
             x = 0 if x > canvas.SizeX / 2 else canvas.SizeX - 1
 
         _, text_size_x, text_size_y = canvas.TextSize(name, 1, 1)
-        canvas.Font = find_object("Font", "UI_Fonts.Font_Hud_Medium")
+        canvas.Font = cast("Font", find_object("Font", "UI_Fonts.Font_Hud_Medium"))
         canvas.SetDrawColor(*text_color)
         canvas.SetBGColor(*bg_color)
         canvas.SetPos(x - text_size_x / 2, y - text_size_y / 2)
@@ -58,7 +63,7 @@ def ping_location(*, location: list[float], color: list[int], name: str) -> None
 
 
 def color_by_player() -> list[int]:
-    player_id: int = get_pc().PlayerReplicationInfo.PlayerID
+    player_id: int = cast("WillowPlayerController", get_pc()).PlayerReplicationInfo.PlayerID
     return [x.value for x in cast(list[ValueOption], colors[player_id % len(colors)].children)]
 
 

@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from time import time
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import unrealsdk
 from unrealsdk.hooks import Type, add_hook
 
 from coroutines.gametime import Time
 
+if TYPE_CHECKING:
+    from common import Canvas
 __all__ = [
     "PostRenderCoroutine",
     "TickCoroutine",
@@ -19,7 +23,7 @@ __all__ = [
     "start_coroutine_tick",
 ]
 
-
+T = TypeVar("T")
 class WaitForSeconds:
     """Wait for the specified amount of time."""
 
@@ -58,18 +62,18 @@ class WaitUntil:
 WaitCondition = WaitForSeconds | WaitWhile | WaitUntil | None
 
 TickCoroutine = Generator[WaitCondition]
-PostRenderCoroutine = Generator[WaitCondition, unrealsdk.unreal.UObject | None]
+PostRenderCoroutine = Generator[WaitCondition, "Canvas"]
 
 
 @dataclass
-class CoroutineData:
+class CoroutineData[T: TickCoroutine | PostRenderCoroutine]:
     __slots__ = ("coroutine", "wait")
-    coroutine: TickCoroutine | PostRenderCoroutine
+    coroutine: T
     wait: WaitCondition
 
 
-_TICK: list[CoroutineData] = []
-_POST_RENDER: list[CoroutineData] = []
+_TICK: list[CoroutineData[TickCoroutine]] = []
+_POST_RENDER: list[CoroutineData[PostRenderCoroutine]] = []
 
 
 def start_coroutine_tick(coroutine: TickCoroutine) -> None:
@@ -160,7 +164,7 @@ def _post_render(
 
     # Before the first call of next or send our coroutines are already primed
     # So they are on the yield Wait Condition state
-    canvas: unrealsdk.unreal.UObject = args.Canvas
+    canvas = cast("Canvas", args.Canvas)
     for t in _POST_RENDER.copy():
         # First check for any wait conditions
         if t.wait is not None and t.wait():
