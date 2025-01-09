@@ -35,10 +35,7 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
     while True:
         yield None
         canvas: Canvas = yield
-        pc = cast("WillowPlayerController", get_pc())
 
-        loc = uemath.Vector(pc.Pawn.Location)
-        loc.z += pc.Pawn.EyeHeight
         screen_pos = canvas.Project(world_pos)
         x = clamp(screen_pos.X, 0, canvas.SizeX - 1)
         y = clamp(screen_pos.Y, 0, canvas.SizeY - 1)
