@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from functools import partial
 from math import sqrt
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import unrealsdk
 from legacy_compat.unrealsdk import KeepAlive
@@ -11,8 +13,11 @@ from unrealsdk.unreal import WeakPointer
 
 from coroutines import TickCoroutine, Time, WaitForSeconds, WaitWhile, start_coroutine_tick
 
+if TYPE_CHECKING:
+    from common import AkEvent, IScreenParticle, Object, WillowPlayerController
 
-def _wait_for_pawn_on_ground(pc: WeakPointer[unreal.UObject]) -> bool:
+
+def _wait_for_pawn_on_ground(pc: WeakPointer[WillowPlayerController]) -> bool:
     if _pc := pc():
         return _pc.IsPaused() or _pc.Pawn is None or not _pc.Pawn.IsOnGroundOrShortFall()
     return True
@@ -31,7 +36,7 @@ class DashData:
     second_dash = False
     dash_cooldown = 0.0
     dash_duration = 0.0
-    dash_dir = (0, 0, 0)
+    dash_dir: tuple[float, float, float] = (0, 0, 0)
 
 
 def wants_to_dash(
@@ -40,7 +45,7 @@ def wants_to_dash(
     _ret: Any,
     _func: unreal.BoundFunction,
 ) -> None:
-    pc = cast(unreal.UObject, obj.Outer)
+    pc = cast("WillowPlayerController", obj.Outer)
     if not pc.Pawn:
         return
 
@@ -52,17 +57,17 @@ def wants_to_dash(
 
 @host.message
 def server_dash() -> None:
-    pc = server_dash.sender.Owner
+    pc = cast("WillowPlayerController", server_dash.sender.Owner)
     dash(pc)
 
 
 @targeted.message
 def dash_particles() -> None:
     if DashConf.b_dash_particles:
-        add_screen_particles(get_pc())
+        add_screen_particles(cast("WillowPlayerController", get_pc()))
 
 
-def dash(pc: unreal.UObject) -> None:
+def dash(pc: WillowPlayerController) -> None:
     pawn = pc.Pawn
     dash_data = DashData()
 
@@ -74,10 +79,10 @@ def dash(pc: unreal.UObject) -> None:
     def impl() -> None:
         dash_particles(pc.PlayerReplicationInfo)
 
-        pawn.PlayAkEvent(unrealsdk.find_object("AkEvent", DashConf.DASH_SOUND1))
-        pawn.PlayAkEvent(unrealsdk.find_object("AkEvent", DashConf.DASH_SOUND2))
+        pawn.PlayAkEvent(cast("AkEvent", unrealsdk.find_object("AkEvent", DashConf.DASH_SOUND1)))
+        pawn.PlayAkEvent(cast("AkEvent", unrealsdk.find_object("AkEvent", DashConf.DASH_SOUND2)))
         dash_data.dash_duration = 0.15
-        dash_data.dash_dir = ((x / mag) * 6500, (y / mag) * 6500, 0)
+        dash_data.dash_dir = ((x / mag) * 6500, (y / mag) * 6500, 0.0)
         start_coroutine_tick(coroutine_tick_dash(WeakPointer(pc), dash_data))
 
     if not dash_data.first_dash:  # Dash once
@@ -90,7 +95,7 @@ def dash(pc: unreal.UObject) -> None:
         impl()
 
 
-def coroutine_tick_cooldown(pc: WeakPointer[unreal.UObject], dash_data: DashData) -> TickCoroutine:
+def coroutine_tick_cooldown(pc: WeakPointer[WillowPlayerController], dash_data: DashData) -> TickCoroutine:
     yield WaitForSeconds(dash_data.dash_cooldown)  # Wait for dash cooldown
     yield WaitWhile(partial(_wait_for_pawn_on_ground, pc))  # Reset once the player is on ground
     dash_data.dash_cooldown = 0
@@ -99,7 +104,7 @@ def coroutine_tick_cooldown(pc: WeakPointer[unreal.UObject], dash_data: DashData
     return None
 
 
-def coroutine_tick_dash(pc: WeakPointer[unreal.UObject], dash_data: DashData) -> TickCoroutine:
+def coroutine_tick_dash(pc: WeakPointer[WillowPlayerController], dash_data: DashData) -> TickCoroutine:
     while True:
         # Wait for pause menu to close
         yield WaitWhile(lambda: get_pc().IsPaused())
@@ -107,9 +112,8 @@ def coroutine_tick_dash(pc: WeakPointer[unreal.UObject], dash_data: DashData) ->
         if not (_pc := pc()):  # the pc is invalid
             return None
         pawn = _pc.Pawn
-        # unrealsdk.CallPostEdit(False)
         x, y, z = dash_data.dash_dir
-        pawn.Velocity = make_struct("Vector", X=x, Y=y, Z=z)
+        pawn.Velocity = cast("Object.Vector", make_struct("Vector", X=x, Y=y, Z=z))
 
         # Break this coroutine if our dash duration is over
         if dash_data.dash_duration <= 0:
@@ -117,31 +121,35 @@ def coroutine_tick_dash(pc: WeakPointer[unreal.UObject], dash_data: DashData) ->
             remove_screen_particles(_pc.PlayerReplicationInfo)
             _x, _y = pawn.Velocity.X, pawn.Velocity.Y
             mag = sqrt(_x**2 + _y**2)
-            pawn.Velocity = make_struct(
-                "Vector",
-                X=(_x / mag) * 200,
-                Y=(_y / mag) * 200,
-                Z=-10,
+            pawn.Velocity = cast(
+                "Object.Vector",
+                make_struct(
+                    "Vector",
+                    X=(_x / mag) * 200,
+                    Y=(_y / mag) * 200,
+                    Z=-10,
+                ),
             )  # Slight Downward velocity because of TPS
-            # unrealsdk.CallPostEdit(True)
             return None
-        # unrealsdk.CallPostEdit(True)
 
 
-def add_screen_particles(pc: unreal.UObject) -> None:
-    particle_params = make_struct(
-        "ScreenParticleInitParams",
-        Template=unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE),
-        ScreenParticleModifiers=[],
-        TemplateScreenParticleMaterial=None,
-        MatParamName="",
-        bHideWhenFinished=True,
-        ParticleTag="",
-        ContentDims=make_struct("Vector2D", X=16, Y=9),
-        ParticleDepth=20,
-        ScalingMode=4,
-        StopParamsOT=make_struct("ScreenParticleParamOverTime"),
-        bOnlyOwnerSee=True,
+def add_screen_particles(pc: WillowPlayerController) -> None:
+    particle_params = cast(
+        "IScreenParticle.ScreenParticleInitParams",
+        make_struct(
+            "ScreenParticleInitParams",
+            Template=unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE),
+            ScreenParticleModifiers=[],
+            TemplateScreenParticleMaterial=None,
+            MatParamName="",
+            bHideWhenFinished=True,
+            ParticleTag="",
+            ContentDims=make_struct("Vector2D", X=16, Y=9),
+            ParticleDepth=20,
+            ScalingMode=4,
+            StopParamsOT=make_struct("ScreenParticleParamOverTime"),
+            bOnlyOwnerSee=True,
+        ),
     )
     pc.ShowScreenParticle(particle_params)
 
@@ -156,7 +164,7 @@ def enable() -> None:
         "WillowGame.WillowPlayerInput:SprintPressed",
         unrealsdk.hooks.Type.PRE,
         "EternalDashInput",
-        wants_to_dash,  
+        wants_to_dash,
     )
 
     if DashConf.b_dash_particles:

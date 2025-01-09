@@ -1,8 +1,13 @@
-from typing import Any, ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import unrealsdk
 from mods_base import ENGINE, get_pc
 from unrealsdk import unreal
+
+if TYPE_CHECKING:
+    from common import EmitterPool, ParticleSystem, Pawn, WillowGameEngine, WillowPlayerController
 
 BLACKLIST = [
     "bugmorph",
@@ -21,11 +26,11 @@ class GloryKill:
     glory_kill_state: ClassVar = {}
 
 
-def get_emitter_pool() -> unreal.UObject:
-    return ENGINE.GetCurrentWorldInfo().MyEmitterPool
+def get_emitter_pool() -> EmitterPool:
+    return cast("WillowGameEngine", ENGINE).GetCurrentWorldInfo().MyEmitterPool
 
 
-def check_glory_kill_state(pawn: unreal.UObject) -> bool:
+def check_glory_kill_state(pawn: Pawn) -> bool:
     if (
         pawn.GetHealth() > 0
         and pawn.GetMaxHealth() > 0
@@ -43,10 +48,10 @@ def on_take_damage(
     _ret: Any,
     _func: unreal.BoundFunction,
 ) -> None:
-    if not check_glory_kill_state(obj):
+    if not check_glory_kill_state(cast("Pawn", obj)):
         return
 
-    pc = get_pc()
+    pc = cast("WillowPlayerController", get_pc())
     instigator = args.InstigatedBy
     # We only allow Melee damage to kill Pawns in glory kill state
     if not (instigator == pc and "melee" in args.DamageType.Name.lower()):
@@ -54,11 +59,10 @@ def on_take_damage(
 
     # Store the location the Pawn was hit
     hit_loc = args.HitLocation
-    hit_loc = (hit_loc.X, hit_loc.Y, hit_loc.Z)
 
     # Spawn the glory killed particle to the hit location
     get_emitter_pool().SpawnEmitter(
-        unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_KILLED_PARTICLE),
+        cast("ParticleSystem", unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_KILLED_PARTICLE)),
         hit_loc,
     )
 
@@ -95,12 +99,12 @@ def enter_glory_kill_state(
             return
 
     get_emitter_pool().SpawnEmitterMeshAttachment(
-        unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_MARKER1),
+        cast("ParticleSystem", unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_MARKER1)),
         obj.MyWillowPawn.Mesh,
         "root",
     )
-    get_emitter_pool.SpawnEmitterMeshAttachment(
-        unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_MARKER2),
+    get_emitter_pool().SpawnEmitterMeshAttachment(
+        cast("ParticleSystem", unrealsdk.find_object("ParticleSystem", GloryKill.GLORY_KILL_MARKER2)),
         obj.MyWillowPawn.Mesh,
         "root",
     )
