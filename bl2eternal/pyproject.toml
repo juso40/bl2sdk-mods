@@ -1,0 +1,19 @@
+[project]
+name = "bl2eternal"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Doom Eternal, but it's BL2.\n
+Adds in-air dashing and glory kills for critically low health.
+"""
+dependencies = [
+  "uemath >= 1.0",
+  "coroutines >= 1.0",
+]
+
+
+
+[tool.sdkmod]
+name = "BL2 Eternal"
+coop_support = "RequiresAllPlayers"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
