@@ -38,7 +38,7 @@ def wants_to_dash(
     obj: unreal.UObject,
     _args: unreal.WrappedStruct,
     _ret: Any,
-    _func: unreal.UFunction,
+    _func: unreal.BoundFunction,
 ) -> None:
     pc = cast(unreal.UObject, obj.Outer)
     if not pc.Pawn:
@@ -156,7 +156,7 @@ def enable() -> None:
         "WillowGame.WillowPlayerInput:SprintPressed",
         unrealsdk.hooks.Type.PRE,
         "EternalDashInput",
-        wants_to_dash,  # type: ignore
+        wants_to_dash,  
     )
 
     if DashConf.b_dash_particles:
