@@ -1,4 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, cast
+
 from mods_base import options
+from unrealsdk import find_object
+
+if TYPE_CHECKING:
+    from common import AkEvent
 
 ping_duration = options.SliderOption(
     "Ping Duration",
@@ -10,6 +17,27 @@ ping_duration = options.SliderOption(
     description="How long the ping should be displayed in seconds.",
 )
 
+
+def get_ak_event_by_name(name: str) -> AkEvent:
+    path_name = {
+        "Ak_Play_UI_HUD_FastTravel_Request": "Ake_UI.UI_HUD.Ak_Play_UI_HUD_FastTravel_Request",
+        "Ak_Play_UI_HUD_Token_Unlocked": "Ake_UI.UI_HUD.Ak_Play_UI_HUD_Token_Unlocked",
+        "Ak_Play_UI_Shield_Confirm": "Ake_UI.UI_Shields.Ak_Play_UI_Shield_Confirm",
+    }.get(name, "")
+    return cast("AkEvent", find_object("AkEvent", path_name))
+
+
+ping_sfx = options.SpinnerOption(
+    "Ping Sound",
+    "Ak_Play_UI_Shield_Confirm",
+    [
+        "None",
+        "Ak_Play_UI_HUD_FastTravel_Request",
+        "Ak_Play_UI_HUD_Token_Unlocked",
+        "Ak_Play_UI_Shield_Confirm",
+    ],
+    wrap_enabled=True,
+)
 
 ping_color_1 = options.NestedOption(
     "Your Ping Color",

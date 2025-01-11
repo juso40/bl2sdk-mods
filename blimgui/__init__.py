@@ -25,9 +25,6 @@ DRAW_FUN = Callable[[], None]
 WINDOW = None
 IMPL = None
 
-size_x = options.HiddenOption("size_x", 1280)
-size_y = options.HiddenOption("size_y", 720)
-
 ALL_THEMES = [
     hello_imgui.ImGuiTheme_.darcula_darker,
     hello_imgui.ImGuiTheme_.darcula,
@@ -93,13 +90,12 @@ ACTIVE_CALLBACK = update
 
 def create_window(
     caption: str,
-    width: int | options.HiddenOption = size_x,
-    height: int | options.HiddenOption = size_y,
+    width: int | None = None,
+    height: int | None = None,
 ) -> None:
     global should_close  # noqa: PLW0603
     should_close = False
-    _x = width if isinstance(width, int) else width.value
-    _y = height if isinstance(height, int) else height.value
+
     immapp.manual_render.setup_from_runner_params(
         runner_params=immapp.RunnerParams(
             fps_idling=hello_imgui.FpsIdling(fps_idle=0.0, enable_idling=False),
@@ -108,10 +104,11 @@ def create_window(
             ),
             app_window_params=hello_imgui.AppWindowParams(
                 window_title=caption,
-                window_geometry=hello_imgui.WindowGeometry(size=(_x, _y)),
+                window_geometry=hello_imgui.WindowGeometry(size=None if not width or not height else (width, height)),
+                restore_previous_geometry=True,
             ),
         ),
-        add_ons_params=None,
+        add_ons_params=immapp.AddOnsParams(with_implot=True, with_markdown=True, with_node_editor=True),
     )
     style_ui()
 
@@ -162,8 +159,6 @@ def test_window() -> None:
 mod = build_mod(
     cls=Library,
     options=[
-        size_x,
-        size_y,
         imgui_theme,
     ],
     hooks=[

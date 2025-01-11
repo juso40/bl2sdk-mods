@@ -1,0 +1,14 @@
+[project]
+name = "akevent_player"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Mostly a dev tool to easily find and play ingame AkEvents.
+"""
+
+
+
+
+[tool.sdkmod]
+name = "AkEvent Player"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }

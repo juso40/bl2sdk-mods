@@ -14,7 +14,7 @@ from ping import settings
 from uemath.umath import clamp
 
 if TYPE_CHECKING:
-    from common import Canvas, Font, WillowPlayerController
+    from common import AkEvent, Canvas, Font, WillowPlayerController
 
 __version__: str
 __version_info__: tuple[int, ...]
@@ -56,6 +56,9 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
 
 @broadcast.json_message
 def ping_location(*, location: list[float], color: list[int], name: str) -> None:
+    cast("WillowPlayerController", get_pc()).PlayAkEvent(
+        settings.get_ak_event_by_name(settings.ping_sfx.value),
+    )
     start_coroutine_post_render(ping_coroutine(location, color, name))
 
 
@@ -82,6 +85,7 @@ mod = build_mod(
     ],
     options=[
         settings.ping_duration,
+        settings.ping_sfx,
         settings.ping_color_1,
         settings.ping_color_2,
         settings.ping_color_3,
