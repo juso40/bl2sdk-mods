@@ -5,7 +5,9 @@ authors = [{ name = "juso" }]
 description = """\
 Mostly a dev tool to easily find and play ingame AkEvents.
 """
-
+dependencies = [
+  "blimgui >= 1.0",
+]
 
 
 
