@@ -1,6 +1,5 @@
 *.pyd
 *.so
-*.sdkmod
 *.zip
 
 .vs
