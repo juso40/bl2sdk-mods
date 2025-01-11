@@ -14,7 +14,7 @@ from ping import settings
 from uemath.umath import clamp
 
 if TYPE_CHECKING:
-    from common import AkEvent, Canvas, Font, WillowPlayerController
+    from common import Canvas, Font, WillowPlayerController
 
 __version__: str
 __version_info__: tuple[int, ...]
