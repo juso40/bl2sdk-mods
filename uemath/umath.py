@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math as m
 from typing import TYPE_CHECKING, cast
 
@@ -76,10 +78,11 @@ def look_at(actor: unrealsdk.unreal.UObject, target: Vec3) -> None:
     bx, by, bz = target
     a = actor.Location
     look_vector = normalize((bx - a.X, by - a.Y, bz - a.Z))
-    actor.Rotation = vector_to_rotator(look_vector)
+    pitch, yaw, roll = vector_to_rotator(look_vector)
+    actor.Rotation = unrealsdk.make_struct("Rotator", Pitch=pitch, Yaw=yaw, Roll=roll)
 
 
-def get_axes(rotation: Rot) -> tuple["Vector", "Vector", "Vector"]:
+def get_axes(rotation: Rot) -> tuple[Vector, Vector, Vector]:
     """Get the axes of a Rotator."""
 
     pitch, yaw, roll = rotation
@@ -110,7 +113,7 @@ def world_to_screen(
         max(1.0, sum(a * b for a, b in zip(delta, axis_x, strict=False))),
     )
 
-    fov = player_fov 
+    fov = player_fov
 
     screen_center_x = canvas.ClipX / 2
     screen_center_y = canvas.ClipY / 2
