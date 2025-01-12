@@ -10,6 +10,7 @@ Every player needs to have this mod installed to be able to receive pings.
 dependencies = [
   "uemath >= 1.0",
   "tracelib >= 1.0",
+  "coroutines >= 1.0",
 ]
 
 
