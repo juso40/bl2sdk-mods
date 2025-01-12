@@ -14,3 +14,4 @@ dependencies = [
 [tool.sdkmod]
 name = "AkEvent Player"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/akevent_player/akevent_player.sdkmod"

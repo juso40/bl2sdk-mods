@@ -10,3 +10,4 @@ A library that adds simple tick and draw coroutines.
 [tool.sdkmod]
 name = "coroutines"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/coroutines/coroutines.sdkmod"

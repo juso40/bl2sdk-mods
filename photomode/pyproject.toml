@@ -14,3 +14,4 @@ Hold 'F' while scrolling to change the camera FOV.
 [tool.sdkmod]
 name = "Photo Mode"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/photomode/photomode.sdkmod"

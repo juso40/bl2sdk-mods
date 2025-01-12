@@ -12,3 +12,4 @@ dependencies = [
 [tool.sdkmod]
 name = "tracelib"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/tracelib/tracelib.sdkmod"

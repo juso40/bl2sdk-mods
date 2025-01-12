@@ -17,3 +17,4 @@ dependencies = [
 name = "BL2 Eternal"
 coop_support = "RequiresAllPlayers"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/bl2eternal/bl2eternal.sdkmod"

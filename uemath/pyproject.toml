@@ -10,3 +10,4 @@ A math library with support for UEVectors and UERotators.
 [tool.sdkmod]
 name = "uemath"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/uemath/uemath.sdkmod"
