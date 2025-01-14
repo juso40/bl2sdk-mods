@@ -5,7 +5,9 @@ authors = [{ name = "juso" }]
 description = """\
 Allows you to edit/add/remove items in your Inventory while ingame.
 """
-
+dependencies = [
+  "blimgui >= 1.0",
+]
 
 [tool.sdkmod]
 name = "Inventory Editor"
