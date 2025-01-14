@@ -1,0 +1,13 @@
+[project]
+name = "inventory_editor"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Allows you to edit/add/remove items in your Inventory while ingame.
+"""
+
+
+[tool.sdkmod]
+name = "Inventory Editor"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/inventory_editor/inventory_editor.sdkmod"

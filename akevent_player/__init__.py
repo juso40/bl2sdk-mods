@@ -70,7 +70,11 @@ def on_end_load(
 def end_scene() -> None:
     if not State.imgui_show:
         return
-    flags = imgui.WindowFlags_.no_decoration | imgui.WindowFlags_.no_move | imgui.WindowFlags_.no_saved_settings  # type: ignore
+    flags = (
+        imgui.WindowFlags_.no_decoration.value
+        | imgui.WindowFlags_.no_move.value
+        | imgui.WindowFlags_.no_saved_settings.value
+    )
     viewport = imgui.get_main_viewport()
     imgui.set_next_window_pos(viewport.pos)
     imgui.set_next_window_size(viewport.size)
