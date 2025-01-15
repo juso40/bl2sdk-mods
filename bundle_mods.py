@@ -18,9 +18,16 @@ def get_mod_dirs() -> list[Path]:
 
 
 def create_mod_zip(mod_dir: Path) -> None:
-    with zipfile.ZipFile(mod_dir/mod_dir.with_suffix(FILE_EXTENSION), "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+    with zipfile.ZipFile(
+        mod_dir / mod_dir.with_suffix(FILE_EXTENSION), "w", zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as zf:
         for child in mod_dir.rglob("*"):
-            if child.is_dir() or "__pycache__" in str(child.absolute()) or child.suffix == FILE_EXTENSION:
+            if (
+                child.is_dir()
+                or "__pycache__" in (abs_path := str(child.absolute()))
+                or child.suffix == FILE_EXTENSION
+                or "blimgui" in abs_path
+            ):
                 continue
             zf.write(child, mod_dir.name / child.relative_to(mod_dir))
 
