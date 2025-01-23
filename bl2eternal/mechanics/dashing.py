@@ -156,7 +156,8 @@ def add_screen_particles(pc: WillowPlayerController) -> None:
 
 @targeted.message
 def remove_screen_particles() -> None:
-    get_pc().HideScreenParticle(unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE), "", False)
+    if DashConf.b_dash_particles:
+        get_pc().HideScreenParticle(unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE), "", False)
 
 
 def enable() -> None:

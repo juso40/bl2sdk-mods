@@ -1,10 +1,10 @@
 [project]
 name = "bl2eternal"
-version = "1.0"
+version = "1.0.1"
 authors = [{ name = "juso" }]
 description = """\
 Doom Eternal, but it's BL2.\n
-Adds in-air dashing and glory kills for critically low health.
+Adds in-air dashing and glory kills for critically low health enemies.
 """
 dependencies = [
   "uemath >= 1.0",
