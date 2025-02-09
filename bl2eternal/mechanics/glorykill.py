@@ -172,17 +172,17 @@ def disable() -> None:
         "GloryKillTakeDamage",
     )
     unrealsdk.hooks.remove_hook(
-        "WillowGame.WillowMind.NotifyAttackedBy",
+        "WillowGame.WillowMind:NotifyAttackedBy",
         unrealsdk.hooks.Type.PRE,
         "GloryKillState",
     )
     unrealsdk.hooks.remove_hook(
-        "WillowGame.WillowPawn.DropLootOnDeath",
+        "WillowGame.WillowPawn:DropLootOnDeath",
         unrealsdk.hooks.Type.PRE,
         "GloryKillLoot",
     )
     unrealsdk.hooks.remove_hook(
-        "WillowGame.WillowPlayerController.PlayerTick",
+        "WillowGame.WillowPlayerController:PlayerTick",
         unrealsdk.hooks.Type.POST_UNCONDITIONAL,
         "GloryKillStateTick",
     )

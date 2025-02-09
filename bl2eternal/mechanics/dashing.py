@@ -39,6 +39,9 @@ class DashData:
     dash_dir: tuple[float, float, float] = (0, 0, 0)
 
 
+PLAYER_DASH_DATA: dict[int, DashData] = {}
+
+
 def wants_to_dash(
     obj: unreal.UObject,
     _args: unreal.WrappedStruct,
@@ -68,9 +71,13 @@ def dash_particles() -> None:
 
 
 def dash(pc: WillowPlayerController) -> None:
-    pawn = pc.Pawn
-    dash_data = DashData()
+    pri = pc.PlayerReplicationInfo
+    dash_data = PLAYER_DASH_DATA.get(pri.PlayerID)
+    if (dash_data := PLAYER_DASH_DATA.get(pri.PlayerID)) is None:
+        dash_data = DashData()
+        PLAYER_DASH_DATA[pri.PlayerID] = dash_data
 
+    pawn = pc.Pawn
     x, y = pawn.Acceleration.X, pawn.Acceleration.Y
     mag = sqrt(x**2 + y**2)
     if mag == 0:  # No directional input, so don't dash
