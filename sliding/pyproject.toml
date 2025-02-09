@@ -1,0 +1,22 @@
+[project]
+name = "sliding"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+*Adds sliding to BL2/TPS/AoDK.*  
+Pressing crouch while sprinting will make you slide.
+If you jump while sliding, you will jump keep the momentum, which generally makes you go further.  
+Sliding down slopes will accelerate you, while sliding up slopes will slow you down.
+"""
+dependencies = [
+    "uemath >= 1.0",
+    "coroutines >= 1.0",
+    "tweens >= 1.0",
+]
+
+
+[tool.sdkmod]
+name = "Sliding"
+coop_support = "RequiresAllPlayers"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/sliding/sliding.sdkmod"

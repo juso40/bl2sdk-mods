@@ -1,0 +1,16 @@
+[project]
+name = "tweens"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+A tweening library with various easing functions.
+"""
+dependencies = [
+    "blimgui >= 1.0",
+]
+
+
+[tool.sdkmod]
+name = "tweens"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/tweens/tweens.sdkmod"
