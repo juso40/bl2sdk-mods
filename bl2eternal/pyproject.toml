@@ -1,6 +1,6 @@
 [project]
 name = "bl2eternal"
-version = "1.0.2"
+version = "1.0.3"
 authors = [{ name = "juso" }]
 description = """\
 Doom Eternal, but it's BL2.\n

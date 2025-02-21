@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import unrealsdk
 from legacy_compat.unrealsdk import KeepAlive
-from mods_base import get_pc
+from mods_base import Game, get_pc
 from networking.decorators import host, targeted
 from unrealsdk import make_struct, unreal
 from unrealsdk.unreal import WeakPointer
@@ -141,6 +141,8 @@ def coroutine_tick_dash(pc: WeakPointer[WillowPlayerController], dash_data: Dash
 
 
 def add_screen_particles(pc: WillowPlayerController) -> None:
+    if Game.get_current() == Game.TPS:
+        return
     particle_params = cast(
         "IScreenParticle.ScreenParticleInitParams",
         make_struct(
@@ -163,18 +165,22 @@ def add_screen_particles(pc: WillowPlayerController) -> None:
 
 @targeted.message
 def remove_screen_particles() -> None:
+    if Game.get_current() == Game.TPS:
+        return
     if DashConf.b_dash_particles:
         get_pc().HideScreenParticle(unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE), "", False)
 
 
 def enable() -> None:
+    # ToDo: find hook or way to make it work for Krieg in Buzax Rampage mode
     unrealsdk.hooks.add_hook(
         "WillowGame.WillowPlayerInput:SprintPressed",
         unrealsdk.hooks.Type.PRE,
         "EternalDashInput",
         wants_to_dash,
     )
-
+    if Game.get_current() == Game.TPS:
+        return
     if DashConf.b_dash_particles:
         unrealsdk.load_package("GD_Assassin_Streaming_SF")
         KeepAlive(unrealsdk.find_object("ParticleSystem", DashConf.SCREEN_PARTICLE))
