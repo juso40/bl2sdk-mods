@@ -4,7 +4,7 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from mods_base import Library, build_mod, get_pc
-from unrealsdk import construct_object, find_all, make_struct, unreal
+from unrealsdk import find_class, make_struct, unreal
 
 import uemath
 
@@ -18,23 +18,12 @@ __version_info__: tuple[int, ...]
 def magic_trace_weapon() -> WillowWeapon:
     @cache
     def create_gun() -> unreal.WeakPointer[WillowWeapon]:
-        weapons = list(find_all("WillowWeapon"))
-        default = weapons[0]
-        template = weapons[1]
-
-        weap = cast(
-            "WillowWeapon",
-            construct_object(
-                cls="WillowWeapon",
-                template_obj=template,
-                outer=default.Outer,
-                name="MagicTraceWeapon",
-            ),
-        )
+        pc = cast("WillowPlayerController", get_pc())
+        weap = cast("WillowWeapon", pc.Spawn(cast(type["Actor"], find_class("WillowWeapon"))))
         return unreal.WeakPointer(weap)
 
-    if (wp := create_gun())():
-        return cast("WillowWeapon", wp())
+    if wp := create_gun()():
+        return wp
     create_gun.cache_clear()
     return cast("WillowWeapon", create_gun()())
 

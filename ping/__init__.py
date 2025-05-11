@@ -6,6 +6,7 @@ from mods_base import CoopSupport, ValueOption, build_mod, get_pc
 from mods_base.keybinds import keybind
 from networking import add_network_functions, broadcast
 from unrealsdk import find_object
+from unrealsdk.unreal import WeakPointer
 
 import tracelib
 import uemath
@@ -34,20 +35,24 @@ def ping_coroutine(location: list[float], color: list[int], name: str) -> PostRe
     bg_color = color[4:]
     while True:
         yield None
-        canvas: Canvas = yield
+        canvas: WeakPointer[Canvas] = yield
+        if not canvas():
+            break
 
-        screen_pos = canvas.Project(world_pos)
-        x = clamp(screen_pos.X, 0, canvas.SizeX - 1)
-        y = clamp(screen_pos.Y, 0, canvas.SizeY - 1)
+        c = cast("Canvas", canvas())
+
+        screen_pos = c.Project(world_pos)
+        x = clamp(screen_pos.X, 0, c.SizeX - 1)
+        y = clamp(screen_pos.Y, 0, c.SizeY - 1)
         if screen_pos.Z > 1:
-            x = 0 if x > canvas.SizeX / 2 else canvas.SizeX - 1
+            x = 0 if x > c.SizeX / 2 else c.SizeX - 1
 
-        _, text_size_x, text_size_y = canvas.TextSize(name, 1, 1)
-        canvas.Font = cast("Font", find_object("Font", "UI_Fonts.Font_Hud_Medium"))
-        canvas.SetDrawColor(*text_color)
-        canvas.SetBGColor(*bg_color)
-        canvas.SetPos(x - text_size_x / 2, y - text_size_y / 2)
-        canvas.DrawTextWithBG(name)
+        _, text_size_x, text_size_y = c.TextSize(name, 1, 1)
+        c.Font = cast("Font", find_object("Font", "UI_Fonts.Font_Hud_Medium"))
+        c.SetDrawColor(*text_color)
+        c.SetBGColor(*bg_color)
+        c.SetPos(x - text_size_x / 2, y - text_size_y / 2)
+        c.DrawTextWithBG(name)
 
         duration -= Time.unscaled_delta_time
         if duration <= 0:

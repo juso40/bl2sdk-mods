@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import unrealsdk
 from unrealsdk.hooks import Type, add_hook
+from unrealsdk.unreal import WeakPointer
 
 from coroutines.gametime import Time
 
@@ -62,7 +63,7 @@ class WaitUntil:
 WaitCondition = WaitForSeconds | WaitWhile | WaitUntil | None
 
 TickCoroutine = Generator[WaitCondition]
-PostRenderCoroutine = Generator[WaitCondition, "Canvas"]
+PostRenderCoroutine = Generator[WaitCondition, WeakPointer["Canvas"]]
 
 
 @dataclass
@@ -164,7 +165,7 @@ def _post_render(
 
     # Before the first call of next or send our coroutines are already primed
     # So they are on the yield Wait Condition state
-    canvas = cast("Canvas", args.Canvas)
+    canvas = WeakPointer(cast("Canvas", args.Canvas))
     for t in _POST_RENDER.copy():
         # First check for any wait conditions
         if t.wait is not None and t.wait():
