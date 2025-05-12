@@ -1,0 +1,15 @@
+[project]
+name = "mateditor"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Allows you to edit MaterialInstanceConstant Objects in realtime.
+"""
+dependencies = [
+  "blimgui >= 1.0",
+]
+
+[tool.sdkmod]
+name = "Material Editor"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/mateditor/mateditor.sdkmod"
