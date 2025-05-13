@@ -1,0 +1,16 @@
+[project]
+name = "quick_startup"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Instantly jump to the main menu, skips all intro and loading screens.
+Credits to -Ry
+"""
+dependencies = [
+]
+
+[tool.sdkmod]
+name = "Quick Startup"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+coop_support = "ClientSide"
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/quick_startup/quick_startup.sdkmod"
