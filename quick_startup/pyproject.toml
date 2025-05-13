@@ -1,9 +1,10 @@
 [project]
 name = "quick_startup"
-version = "1.0"
+version = "1.1"
 authors = [{ name = "juso" }]
 description = """\
 Instantly jump to the main menu, skips all intro and loading screens.
+Offline Helpers mod is recommended if using the safe mode option for faster loading.
 Credits to -Ry
 """
 dependencies = [
