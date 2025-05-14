@@ -21,7 +21,9 @@ def input_key(
 ) -> type[Block] | None:
     console = cast("Console", obj)
 
-    if args.Event == 1 and (args.Key not in ["BackSpace", "Delete", "Down", "Up", "Left", "Right", "Tab"] or not console.bCtrl):
+    if args.Event == 1 and (
+        args.Key not in ["BackSpace", "Delete", "Down", "Up", "Left", "Right", "Tab"] or not console.bCtrl
+    ):
         commands.update_suggestions(console.TypedStr)
         return None
 
@@ -79,6 +81,18 @@ def post_render_console(
         commands.Commands.suggestions,
         commands.Commands.suggestion_index,
     )
+
+
+@hook("Engine.Console:Open.InputChar", Type.PRE)
+def input_char(
+    _obj: unreal.UObject,
+    args: unreal.WrappedStruct,
+    _ret: Any,
+    _func: unreal.BoundFunction,
+) -> type[Block] | None:
+    if args.Unicode == "\x7f":  # block the □ (delete) character
+        return Block
+    return None
 
 
 mod = build_mod()

@@ -3,7 +3,13 @@ name = "decent_console"
 version = "1.0"
 authors = [{ name = "juso" }]
 description = """\
-Auto completion for the console.
+My attempt at improving the ingame console by adding:
+
+- ctrl+backspace to delete the last word
+- ctrl+delete to delete the next word
+- ctrl+left/right to move the cursor by word
+- auto-completion for commands by pressing tab
+- switch between suggestions with ctrl+up/down
 """
 dependencies = [
 ]

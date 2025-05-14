@@ -3,37 +3,102 @@ from argparse import Namespace
 from mods_base import command
 
 
-@command("obj")
+@command("obj", add_help=False)
 def obj_cmd(_arg: Namespace) -> None:
     pass
+
 
 cmd_parser = obj_cmd.parser.add_subparsers(dest="command", required=True)
 obj_cmd.parser.add_argument(
     "command",
     type=str,
-    choices=["dump", "classess", "refs"],
-    help="Command to execute",
+    choices=["dump", "classes", "refs", "list"],
 )
 
 obj_dump = cmd_parser.add_parser(
     "dump",
-    help="Dump the object to a file",
+    add_help=False,
 )
 obj_dump.add_argument(
     "Object",
-    metavar="PathName",
+    type=str,
+    choices=["$PathName"],
 )
 
-obj_classes=cmd_parser.add_parser(
+obj_classes = cmd_parser.add_parser(
     "classes",
-    help="List all classes",
+    description="Obj Classes (Shows all classes)",
+    add_help=False,
 )
 
-obj_refs=cmd_parser.add_parser(
+obj_refs = cmd_parser.add_parser(
     "refs",
-    help="List all references to the object",
+    description="Name=<ObjectName> Class=<OptionalObjectClass> Lists referencers of the specified object",
+    add_help=False,
 )
 obj_refs.add_argument(
-    "Name=PathName",
-    metavar="PathName",
+    "Name",
+    type=str,
+    choices=["Name=$PathName"],
+)
+
+obj_list = cmd_parser.add_parser(
+    "list",
+    description="Obj List <Class=ClassName> <Type=MetaClass> <Outer=OuterObject> <Package=InsidePackage> <Inside=InsideObject>",
+    add_help=False,
+)
+obj_list.add_argument(
+    "Class",
+    nargs="?",
+    type=str,
+    choices=["Class=$ClassName"],
+)
+
+obj_list.add_argument(
+    "Type",
+    nargs="?",
+    type=str,
+    choices=["Type=$ClassName"],
+)
+obj_list.add_argument(
+    "Outer",
+    nargs="?",
+    type=str,
+    choices=["Outer=$PathName"],
+)
+obj_list.add_argument(
+    "Package",
+    nargs="?",
+    type=str,
+    choices=["Package=$PathName"],
+)
+obj_list.add_argument(
+    "Inside",
+    nargs="?",
+    type=str,
+    choices=["Inside=$PathName"],
+)
+
+obj_dependencies = cmd_parser.add_parser(
+    "dependencies",
+    description="Obj Dependencies <Class=ClassName> <Type=MetaClass> <Outer=OuterObject> <Package=InsidePackage> <Inside=InsideObject>",
+    add_help=False,
+)
+obj_dependencies.add_argument(
+    "Package",
+    nargs="?",
+    type=str,
+    choices=["Package=$PathName"],
+)
+
+obj_garbage = cmd_parser.add_parser(
+    "garbage",
+    description="Collect and purge garbage",
+    add_help=False,
+)
+
+obj_hash = cmd_parser.add_parser(
+    "hash",
+    description="Show object hashing information",
+    add_help=False,
 )

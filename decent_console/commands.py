@@ -101,7 +101,6 @@ def ctrl_right(text: str, cursor: int) -> int:
 
 
 def update_suggestions(text: str) -> None:
-
     _sugg = suggestions.update_suggestions(text, {x.prog: x for x in Commands.argparse_commands})
     Commands.suggestions = _sugg
 
@@ -125,7 +124,7 @@ def accept_suggestion(console: Console) -> None:
     console.SetInputText(curr_text)
     console.TypedStrPos = len(console.TypedStr)
 
-    update_suggestions(curr_text)
+    update_suggestions("")
 
 
 def suggestions_change(direction: int) -> None:

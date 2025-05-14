@@ -21,6 +21,9 @@ def draw(console: Console, canvas: Canvas, suggestions: list[str], selected: int
     canvas.SetPos(suggestions_x, suggestions_y)
     canvas.Font = canvas.GetDefaultCanvasFont()
     visible_suggestions, visible_selection = get_visible_suggestions_split(suggestions, selected)
+    max_x = max(canvas.StrLen(suggestion, 0, 0)[1] for suggestion in visible_suggestions)
+    canvas.DrawTile(console.DefaultTexture_Black, max_x, str_len_y * len(visible_suggestions), 0, 0, 0, 0)
+    canvas.SetPos(suggestions_x, suggestions_y)
     for i, suggestion in enumerate(visible_suggestions):
         draw_suggestion_prepare_next(canvas, suggestion, i == visible_selection)
 

@@ -1,6 +1,8 @@
 import argparse
-from unrealsdk import find_all, find_object
+import os
 from contextlib import suppress
+
+from unrealsdk import find_all, find_object
 
 
 def parse_input(text: str) -> tuple[list[str], str]:
@@ -64,40 +66,82 @@ def get_action_for_option(parser: argparse.ArgumentParser, option: str) -> argpa
     return None
 
 
-def get_pathname_suggestions(parser: argparse.ArgumentParser, incomplete: str) -> list[str]:
+def path_name_choices(template: str, incomplete: str) -> list[str]:
     choices = []
-    for action in parser._actions:
-        # skip subparsers action (not a regular positional argument)
-        if isinstance(action, argparse._SubParsersAction):
-            continue
-        # positional actions have no option_strings
-        if action.metavar == "PathName" and not action.option_strings:
-            if incomplete.strip() == "":
-                choices.extend(x._path_name() for x in find_all("Package"))
-            else:
-                incomplete_outer = incomplete
-                if incomplete:
-                    incomplete_outer = incomplete.rsplit(".", maxsplit=1)[0]
+    if incomplete.strip() == "":
+        choices.extend(x._path_name() for x in find_all("Package"))
+    else:
+        incomplete_outer = incomplete
+        if incomplete:
+            incomplete_outer = incomplete.rsplit(".", maxsplit=1)[0]
 
-                outer = None
-                with suppress(ValueError):
-                    outer = find_object("Object", incomplete_outer)
-                if outer is None:
-                    with suppress(ValueError):
-                        outer = find_object("Package", incomplete_outer)
+        outer = None
+        with suppress(ValueError):
+            outer = find_object("Object", incomplete_outer)
+        if outer is None:
+            with suppress(ValueError):
+                outer = find_object("Package", incomplete_outer)
 
-                if outer is None:  # we need a package first
-                    for package in find_all("Package", exact=False):
-                        if package._path_name().startswith(incomplete_outer):
-                            choices.append(package._path_name())
-                else:
-                    for package in find_all("Package", exact=False):
-                        if package.Outer == outer and package._path_name().startswith(incomplete):
-                            choices.append(package._path_name())
-                    for x in find_all("Object", exact=False):
-                        if x.Outer == outer and x._path_name().startswith(incomplete):
-                            choices.append(x._path_name())
-    return choices
+        if outer is None:  # we need a package first
+            for package in find_all("Package", exact=False):
+                if package._path_name().startswith(incomplete_outer):
+                    choices.append(package._path_name())
+        else:
+            for package in find_all("Package", exact=False):
+                if package.Outer == outer and package._path_name().startswith(incomplete):
+                    choices.append(package._path_name())
+            for x in find_all("Object", exact=False):
+                if x.Outer == outer and x._path_name().startswith(incomplete):
+                    choices.append(x._path_name())
+
+    return [f"{template.replace('$PathName', choice)}" for choice in choices]
+
+
+def class_name_choices(template: str, incomplete: str) -> list[str]:
+    choices = []
+    if incomplete.strip() == "":
+        choices.extend(x._path_name() for x in find_all("Class"))
+    else:
+        for x in find_all("Class", exact=False):
+            if x._path_name().startswith(incomplete):
+                choices.append(x._path_name())
+    return [f"{template.replace('$ClassName', choice)}" for choice in choices]
+
+
+def property_name_choices(template: str, incomplete: str, line: str) -> list[str]:
+    words = line.split()
+
+    uobj = None
+    for word in words:
+        with suppress(ValueError):
+            uobj = find_object("Object", word)
+            break
+    if uobj is None:
+        return []
+
+    choices = []
+    for prop in uobj._properties():
+        if prop.name.startswith(incomplete):
+            choices.append(prop.name)
+    return [f"{template.replace('$PropertyName', choice)}" for choice in choices]
+
+
+def fix_template_choices(choices: list[str], incomplete: str, line: str) -> list[str]:
+    fixed_choices = []
+    for choice in choices:
+        common_prefix = len(os.path.commonprefix([choice, incomplete]))
+
+        incomplete = incomplete[common_prefix:]
+        if "$PathName" in choice:
+            fixed_choices.extend(path_name_choices(choice, incomplete))
+        elif "$ClassName" in choice:
+            fixed_choices.extend(class_name_choices(choice, incomplete))
+        elif "$PropertyName" in choice:
+            fixed_choices.extend(property_name_choices(choice, incomplete, line))
+        else:
+            fixed_choices.append(choice)
+
+    return fixed_choices
 
 
 def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -> list[str]:
@@ -105,7 +149,7 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     # Suggest top-level commands if none typed
     if not words:
         if incomplete:
-            return [cmd for cmd in parsers if cmd.startswith(incomplete)]
+            return [cmd for cmd in parsers if cmd.lower().startswith(incomplete)]
         return list(parsers.keys())
 
     # Identify the top-level command
@@ -113,7 +157,7 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     if first not in parsers:
         # Partial or unknown top-level command
         if incomplete:
-            return [cmd for cmd in parsers if cmd.startswith(first)]
+            return [cmd for cmd in parsers if cmd.lower().startswith(first)]
         return []
 
     current_parser = parsers[first]
@@ -138,21 +182,19 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     # Collect available subcommands, options, and positional choices
     subcommands = get_subcommands(current_parser)
     options = get_options(current_parser)
-    path_name_suggestions = get_pathname_suggestions(current_parser, incomplete)
     # Exclude options already used in the input
     used_flags = {t for t in words if t.startswith("-")}
     options = [opt for opt in options if opt not in used_flags]
     positional_choices = get_positional_choices(current_parser)
+    positional_choices = fix_template_choices(positional_choices, incomplete, text)
 
     suggestions = []
     if incomplete == "":
         # At a word boundary, suggest all possible next tokens
-        suggestions = subcommands + options + positional_choices + path_name_suggestions
+        suggestions = subcommands + options + positional_choices
     elif incomplete.startswith("-"):
-        suggestions = [opt for opt in options if opt.startswith(incomplete)]
+        suggestions = [opt for opt in options if opt.lower().startswith(incomplete)]
     else:
-        suggestions = [sub for sub in subcommands if sub.startswith(incomplete)]
-        suggestions += [choice for choice in positional_choices if choice.startswith(incomplete)]
-        suggestions += path_name_suggestions
-
+        suggestions = [sub for sub in subcommands if sub.lower().startswith(incomplete)]
+        suggestions += [choice for choice in positional_choices if choice.lower().startswith(incomplete)]
     return list(set(suggestions))
