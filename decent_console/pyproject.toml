@@ -1,0 +1,14 @@
+[project]
+name = "decent_console"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Auto completion for the console.
+"""
+dependencies = [
+]
+
+[tool.sdkmod]
+name = "Decent Console"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/decent_console/decent_console.sdkmod"
