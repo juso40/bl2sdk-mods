@@ -1,8 +1,21 @@
 import argparse
+import difflib
 import os
+from collections.abc import Iterable
 from contextlib import suppress
 
 from unrealsdk import find_all, find_object
+
+
+def fuzzy_match(incomplete: str, choices: Iterable[str]) -> list[str]:
+    if not incomplete:
+        return list(choices)
+    return difflib.get_close_matches(
+        incomplete,
+        choices,
+        n=20,
+        cutoff=0.2,
+    )
 
 
 def parse_input(text: str) -> tuple[list[str], str]:
@@ -19,7 +32,9 @@ def parse_input(text: str) -> tuple[list[str], str]:
     return words, incomplete
 
 
-def find_subparsers_action(parser: argparse.ArgumentParser) -> argparse._SubParsersAction | None:
+def find_subparsers_action(
+    parser: argparse.ArgumentParser,
+) -> argparse._SubParsersAction | None:
     """Return the subparsers action from the parser if present."""
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):
@@ -67,7 +82,7 @@ def get_action_for_option(parser: argparse.ArgumentParser, option: str) -> argpa
 
 
 def path_name_choices(template: str, incomplete: str) -> list[str]:
-    choices = []
+    choices: list[str] = []
     if incomplete.strip() == "":
         choices.extend(x._path_name() for x in find_all("Package"))
     else:
@@ -83,29 +98,36 @@ def path_name_choices(template: str, incomplete: str) -> list[str]:
                 outer = find_object("Package", incomplete_outer)
 
         if outer is None:  # we need a package first
-            for package in find_all("Package", exact=False):
-                if package._path_name().startswith(incomplete_outer):
-                    choices.append(package._path_name())
+            choices.extend(
+                fuzzy_match(
+                    incomplete,
+                    {package._path_name() for package in find_all("Package", exact=False)},
+                ),
+            )
         else:
-            for package in find_all("Package", exact=False):
-                if package.Outer == outer and package._path_name().startswith(incomplete):
-                    choices.append(package._path_name())
-            for x in find_all("Object", exact=False):
-                if x.Outer == outer and x._path_name().startswith(incomplete):
-                    choices.append(x._path_name())
+            choices.extend(
+                fuzzy_match(
+                    incomplete,
+                    {package._path_name() for package in find_all("Package", exact=False) if package.Outer == outer},
+                ),
+            )
 
     return [f"{template.replace('$PathName', choice)}" for choice in choices]
 
 
 def class_name_choices(template: str, incomplete: str) -> list[str]:
-    choices = []
+    choices: list[str] = []
     if incomplete.strip() == "":
         choices.extend(x._path_name() for x in find_all("Class"))
     else:
-        for x in find_all("Class", exact=False):
-            if x._path_name().startswith(incomplete):
-                choices.append(x._path_name())
-    return [f"{template.replace('$ClassName', choice)}" for choice in choices]
+        choices.extend(
+            fuzzy_match(
+                incomplete,
+                {cls._path_name() for cls in find_all("Class", exact=False)},
+            ),
+        )
+
+    return [template.replace("$ClassName", choice) for choice in choices]
 
 
 def property_name_choices(template: str, incomplete: str, line: str) -> list[str]:
@@ -119,15 +141,12 @@ def property_name_choices(template: str, incomplete: str, line: str) -> list[str
     if uobj is None:
         return []
 
-    choices = []
-    for prop in uobj._properties():
-        if prop.name.startswith(incomplete):
-            choices.append(prop.name)
-    return [f"{template.replace('$PropertyName', choice)}" for choice in choices]
+    choices = fuzzy_match(incomplete, {prop.name for prop in uobj._properties()})
+    return [template.replace("$PropertyName", choice) for choice in choices]
 
 
 def fix_template_choices(choices: list[str], incomplete: str, line: str) -> list[str]:
-    fixed_choices = []
+    fixed_choices: list[str] = []
     for choice in choices:
         common_prefix = len(os.path.commonprefix([choice, incomplete]))
 
@@ -176,7 +195,10 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
         action = get_action_for_option(current_parser, last_word)
         if action and action.choices:
             if incomplete:
-                return [str(choice) for choice in action.choices if str(choice).startswith(incomplete)]
+                return fuzzy_match(
+                    incomplete,
+                    [str(choice) for choice in action.choices],
+                )
             return [str(choice) for choice in action.choices]
 
     # Collect available subcommands, options, and positional choices
@@ -188,13 +210,16 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     positional_choices = get_positional_choices(current_parser)
     positional_choices = fix_template_choices(positional_choices, incomplete, text)
 
-    suggestions = []
+    suggestions: list[str] = []
     if incomplete == "":
         # At a word boundary, suggest all possible next tokens
-        suggestions = subcommands + options + positional_choices
+        suggestions = fuzzy_match(
+            incomplete,
+            subcommands + options + positional_choices,
+        )
     elif incomplete.startswith("-"):
-        suggestions = [opt for opt in options if opt.lower().startswith(incomplete)]
+        suggestions = fuzzy_match(incomplete, options)
     else:
-        suggestions = [sub for sub in subcommands if sub.lower().startswith(incomplete)]
-        suggestions += [choice for choice in positional_choices if choice.lower().startswith(incomplete)]
-    return list(set(suggestions))
+        suggestions = fuzzy_match(incomplete, subcommands + positional_choices)
+
+    return fuzzy_match(incomplete, set(suggestions))

@@ -62,6 +62,6 @@ def say_cmd(_arg: Namespace) -> None:
     pass
 
 
-@command("dissconnect", description="Disconnect from the server", add_help=False)
+@command("disconnect", description="Disconnect from the server", add_help=False)
 def disconnect_cmd(_arg: Namespace) -> None:
     pass

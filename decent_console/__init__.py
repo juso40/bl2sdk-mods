@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from time import time
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-from mods_base import build_mod, hook
+from mods_base import EInputEvent, build_mod, hook
 from unrealsdk import unreal
 from unrealsdk.hooks import Block, Type
 
@@ -12,60 +13,89 @@ if TYPE_CHECKING:
     from common import Canvas, Console
 
 
+DEBOUNCE_TIME = 0.15  # seconds
+
+
+class State:
+    current_mode: ClassVar[console.ESuggestionMode] = console.ESuggestionMode.NONE
+    last_input_time: ClassVar[float] = 0.0
+    last_typed_str: ClassVar[str] = ""
+    last_processed_str: ClassVar[str] = ""
+
+
+def handle_ctrl_commands(console: Console, key: str) -> None | tuple[type[Block], bool]:
+    match key:
+        case "BackSpace":
+            console.TypedStr, console.TypedStrPos = commands.ctrl_backspace(console.TypedStr, console.TypedStrPos)
+        case "Delete":
+            console.TypedStr, console.TypedStrPos = commands.ctrl_delete(console.TypedStr, console.TypedStrPos)
+        case "Left":
+            console.TypedStrPos = commands.ctrl_left(console.TypedStr, console.TypedStrPos)
+        case "Right":
+            console.TypedStrPos = commands.ctrl_right(console.TypedStr, console.TypedStrPos)
+        case _:
+            return None
+    return Block, True
+
+
 @hook("Engine.Console:Open.InputKey", Type.PRE)
 def input_key(
     obj: unreal.UObject,
     args: unreal.WrappedStruct,
     _ret: Any,
     _func: unreal.BoundFunction,
-) -> type[Block] | None:
-    console = cast("Console", obj)
+) -> None | tuple[type[Block], bool]:
+    uconsole = cast("Console", obj)
+    key = args.Key
+    typed_str = uconsole.TypedStr
 
-    if args.Event == 1 and (
-        args.Key not in ["BackSpace", "Delete", "Down", "Up", "Left", "Right", "Tab"] or not console.bCtrl
-    ):
-        commands.update_suggestions(console.TypedStr)
+    # Give back controll to the game to allow Scroll up/down in the console history
+    if typed_str.strip() == "" and key in ("Up", "Down") and State.current_mode != console.ESuggestionMode.SUGGESTIONS:
+        State.current_mode = console.ESuggestionMode.HISTORY
         return None
 
-    if not args.Event in (0, 2):
+    # Disable and clear current mode
+    if key == "Escape" and State.current_mode != console.ESuggestionMode.NONE and args.Event == EInputEvent.IE_Released:
+        ret = Block, True
+        if uconsole.TypedStr == "" and State.current_mode == console.ESuggestionMode.HISTORY:
+            ret = None
+        State.current_mode = console.ESuggestionMode.NONE
+        uconsole.TypedStr = ""
+        uconsole.TypedStrPos = 0
+        return ret
+    # filter the relevant events
+    if args.Event not in (EInputEvent.IE_Pressed, EInputEvent.IE_Repeat):
         return None
 
-    match args.Key:
-        case "BackSpace":
-            if not console.bCtrl:
-                return None
-            console.TypedStr, console.TypedStrPos = commands.ctrl_backspace(console.TypedStr, console.TypedStrPos)
-            return Block
-        case "Delete":
-            if not console.bCtrl:
-                return None
-            console.TypedStr, console.TypedStrPos = commands.ctrl_delete(console.TypedStr, console.TypedStrPos)
-            return Block
+    if uconsole.bCtrl:
+        return handle_ctrl_commands(uconsole, key)
+
+    if State.current_mode != console.ESuggestionMode.SUGGESTIONS:
+        return None
+    # Handle suggestion input logic
+    match key:
         case "Down":
-            if not console.bCtrl:
-                return None
             commands.suggestions_change(1)
-            return Block
         case "Up":
-            if not console.bCtrl:
-                return None
             commands.suggestions_change(-1)
-            return Block
-        case "Left":
-            if not console.bCtrl:
-                return None
-            console.TypedStrPos = commands.ctrl_left(console.TypedStr, console.TypedStrPos)
-            return Block
-        case "Right":
-            if not console.bCtrl:
-                return None
-            console.TypedStrPos = commands.ctrl_right(console.TypedStr, console.TypedStrPos)
-            return Block
         case "Tab":
-            commands.accept_suggestion(console)
-            return Block
+            commands.accept_suggestion(uconsole)
+        case _:
+            return None
 
-    return None
+    return Block, True
+
+
+@hook("Engine.Console:Open.InputKey", Type.POST_UNCONDITIONAL)
+def input_key_post(
+    obj: unreal.UObject,
+    _args: unreal.WrappedStruct,
+    _ret: Any,
+    _func: unreal.BoundFunction,
+) -> None:
+    uconsole = cast("Console", obj)
+    State.last_typed_str = uconsole.TypedStr
+    State.last_input_time = time()
 
 
 @hook("Engine.Console:Open.PostRender_Console", Type.POST_UNCONDITIONAL)
@@ -75,23 +105,38 @@ def post_render_console(
     _ret: Any,
     _func: unreal.BoundFunction,
 ) -> None:
+    uconsole = cast("Console", obj)
+    if (
+        time() - State.last_input_time > DEBOUNCE_TIME
+        and State.last_typed_str != State.last_processed_str
+        and State.current_mode == console.ESuggestionMode.SUGGESTIONS
+    ):
+        commands.update_suggestions(State.last_typed_str)
+        State.last_processed_str = State.last_typed_str
+
     console.draw(
-        cast("Console", obj),
+        uconsole,
         cast("Canvas", args.Canvas),
-        commands.Commands.suggestions,
-        commands.Commands.suggestion_index,
+        State.current_mode,
     )
 
 
 @hook("Engine.Console:Open.InputChar", Type.PRE)
 def input_char(
-    _obj: unreal.UObject,
+    obj: unreal.UObject,
     args: unreal.WrappedStruct,
     _ret: Any,
     _func: unreal.BoundFunction,
-) -> type[Block] | None:
+) -> tuple[type[Block], bool] | None:
+    uconsole = cast("Console", obj)
     if args.Unicode == "\x7f":  # block the □ (delete) character
-        return Block
+        return Block, True
+    if args.Unicode == " " and uconsole.bCtrl:
+        State.current_mode = console.ESuggestionMode.SUGGESTIONS
+        commands.update_suggestions(uconsole.TypedStr)
+        return Block, True
+    if args.Unicode != "\x1b":  # Ignore escape char
+        State.current_mode = console.ESuggestionMode.SUGGESTIONS
     return None
 
 
