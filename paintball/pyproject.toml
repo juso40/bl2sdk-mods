@@ -1,0 +1,14 @@
+[project]
+name = "paintball"
+version = "1.0"
+authors = [{ name = "juso" }]
+description = """\
+Replaces the boring decals with paintball splats!
+"""
+dependencies = [
+]
+
+[tool.sdkmod]
+name = "Paintball"
+license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/paintball/paintball.sdkmod"
