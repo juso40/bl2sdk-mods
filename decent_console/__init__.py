@@ -135,9 +135,17 @@ def input_char(
         State.current_mode = console.ESuggestionMode.SUGGESTIONS
         commands.update_suggestions(uconsole.TypedStr)
         return Block, True
-    if args.Unicode != "\x1b":  # Ignore escape char
+    if args.Unicode not in ("\x1b", "\r"):  # Ignore escape and enter
         State.current_mode = console.ESuggestionMode.SUGGESTIONS
     return None
 
+@hook("Engine.Console:Open.BeginState", Type.POST_UNCONDITIONAL)
+def open_console(
+    _obj: unreal.UObject,
+    _args: unreal.WrappedStruct,
+    _ret: Any,
+    _func: unreal.BoundFunction,
+) -> None:
+    State.current_mode = console.ESuggestionMode.NONE
 
 mod = build_mod()

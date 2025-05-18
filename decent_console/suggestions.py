@@ -150,24 +150,30 @@ def property_name_choices(template: str, incomplete: str, line: str) -> list[str
     if uobj is None:
         return []
 
-    choices = fuzzy_match(incomplete, {prop.name for prop in uobj._properties()})
+    try:
+        choices = fuzzy_match(incomplete, {prop.name for prop in uobj._properties()})
+    except AttributeError:
+        # If the object doesn't have properties, return an empty list
+        return []
     return [template.replace("$PropertyName", choice) for choice in choices]
 
 
 def fix_template_metavars(choices: list[str], incomplete: str, line: str) -> list[str]:
     fixed_choices: list[str] = []
     for choice in choices:
-        common_prefix = len(os.path.commonprefix([choice, incomplete]))
-
-        incomplete = incomplete[common_prefix:]
-        if "$PathName" in choice:
-            fixed_choices.extend(path_name_choices(choice, incomplete))
-        elif "$ClassName" in choice:
-            fixed_choices.extend(class_name_choices(choice, incomplete))
-        elif "$PropertyName" in choice:
-            fixed_choices.extend(property_name_choices(choice, incomplete, line))
-        else:
+        if "$" not in choice:
             fixed_choices.append(choice)
+            continue
+        for template in choice.split("|"):
+            common_prefix = len(os.path.commonprefix([template, incomplete]))
+
+            incomplete = incomplete[common_prefix:]
+            if "$PathName" in template:
+                fixed_choices.extend(path_name_choices(template, incomplete))
+            elif "$ClassName" in template:
+                fixed_choices.extend(class_name_choices(template, incomplete))
+            elif "$PropertyName" in template:
+                fixed_choices.extend(property_name_choices(template, incomplete, line))
 
     return fixed_choices
 
@@ -207,13 +213,14 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     words, incomplete = parse_input(unparsed)
     base_line = text[: len(text) - len(incomplete)]
 
-    # No matching parser: suggest top-level commands
     if current_parser is None:
+        if words:
+            return []
         matches = fuzzy_match(incomplete, parsers.keys())
         return [
             Suggestion(command=f"{base_line}{match}", description=parsers[match].description or "") for match in matches
         ]
-    # Check if the last word is an option expecting a value
+
     if words:
         last_word = words[-1]
         if last_word.startswith("-"):
@@ -222,12 +229,28 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
                 choices = fuzzy_match(incomplete, [str(c) for c in action.choices])
                 return [Suggestion(command=f"{base_line}{c}", description=action.help or "") for c in choices]
 
-    # Gather suggestions from parser
     subcommands = get_subcommands(current_parser)
     options = get_options(current_parser)
     used_flags = {w for w in words if w.startswith("-")}
     options = [opt for opt in options if opt not in used_flags]
-    positional_choices = fix_template_metavars(get_positional_choices(current_parser), incomplete, text)
+
+    used_positionals = [w for w in words if not w.startswith("-")]
+    required_positionals = [
+        action
+        for action in current_parser._actions
+        if not action.option_strings and not isinstance(action, argparse._SubParsersAction)
+    ]
+    unused_required_positionals = required_positionals[len(used_positionals) :]
+
+    # Only suggest metavars/choices for unused required positional args
+    positional_choices = []
+    for action in unused_required_positionals:
+        if action.metavar:
+            positional_choices.append(action.metavar)
+        elif action.choices:
+            positional_choices.extend([str(c) for c in action.choices])
+
+    positional_choices = fix_template_metavars(positional_choices, incomplete, text)
 
     # Decide what we're completing
     if incomplete == "":
@@ -237,18 +260,24 @@ def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -
     else:
         tokens = subcommands + positional_choices
 
+    tokens = list(set(tokens))  # De-duplicate tokens
     matches = fuzzy_match(incomplete, tokens)
+
+    seen = set()
     suggestions: list[Suggestion] = []
     for match in matches:
         full = f"{base_line}{match}"
+        if full in seen:
+            continue
+        seen.add(full)
+
         desc = current_parser.description or ""
-        # If it's a subcommand, find its help
+
         if match in subcommands:
             sub_action = find_subparsers_action(current_parser)
             if sub_action and match in sub_action.choices:
                 desc = sub_action.choices[match].description or ""
 
-        # If it's an option, find its help
         if match.startswith("-"):
             action = get_action_for_option(current_parser, match)
             if action and action.help:

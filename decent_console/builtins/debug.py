@@ -55,3 +55,7 @@ def particle_mesh_usage_cmd(_arg: Namespace) -> None:
 @command("showmiplevels", description="Toggles the use of solid colors in place of lightmaps to visualize mip levels.", add_help=False)
 def show_mip_levels_cmd(_arg: Namespace) -> None:
     pass
+
+@command("showhotkismet", description=" Outputs the top 10 most used Kismet sequence ops.", add_help=False)
+def show_hot_kismet_cmd(_arg: Namespace) -> None:
+    pass
