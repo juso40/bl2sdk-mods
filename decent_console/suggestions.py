@@ -3,8 +3,15 @@ import difflib
 import os
 from collections.abc import Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 
 from unrealsdk import find_all, find_object
+
+
+@dataclass
+class Suggestion:
+    command: str
+    description: str = ""
 
 
 def fuzzy_match(incomplete: str, choices: Iterable[str]) -> list[str]:
@@ -67,6 +74,8 @@ def get_positional_choices(parser: argparse.ArgumentParser) -> list[str]:
         # skip subparsers action (not a regular positional argument)
         if isinstance(action, argparse._SubParsersAction):
             continue
+        if action.metavar:
+            choices.append(action.metavar)
         # positional actions have no option_strings
         if not action.option_strings and action.choices:
             choices.extend([str(c) for c in action.choices])
@@ -84,7 +93,7 @@ def get_action_for_option(parser: argparse.ArgumentParser, option: str) -> argpa
 def path_name_choices(template: str, incomplete: str) -> list[str]:
     choices: list[str] = []
     if incomplete.strip() == "":
-        choices.extend(x._path_name() for x in find_all("Package"))
+        choices.extend(x._path_name() for x in find_all("Package", exact=False))
     else:
         incomplete_outer = incomplete
         if incomplete:
@@ -145,7 +154,7 @@ def property_name_choices(template: str, incomplete: str, line: str) -> list[str
     return [template.replace("$PropertyName", choice) for choice in choices]
 
 
-def fix_template_choices(choices: list[str], incomplete: str, line: str) -> list[str]:
+def fix_template_metavars(choices: list[str], incomplete: str, line: str) -> list[str]:
     fixed_choices: list[str] = []
     for choice in choices:
         common_prefix = len(os.path.commonprefix([choice, incomplete]))
@@ -163,63 +172,89 @@ def fix_template_choices(choices: list[str], incomplete: str, line: str) -> list
     return fixed_choices
 
 
-def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -> list[str]:
+
+def find_matching_parser(
+    text: str,
+    parsers: dict[str, argparse.ArgumentParser],
+) -> tuple[argparse.ArgumentParser | None, str]:
+    """Find the parser or subparser that parses most of the input text and returns the remaining non matched text."""
     words, incomplete = parse_input(text)
-    # Suggest top-level commands if none typed
     if not words:
-        if incomplete:
-            return [cmd for cmd in parsers if cmd.lower().startswith(incomplete)]
-        return list(parsers.keys())
+        return None, incomplete
 
-    # Identify the top-level command
+    current_parser = None
+    # Check if the first word is a top-level command
     first = words[0]
-    if first not in parsers:
-        # Partial or unknown top-level command
-        if incomplete:
-            return [cmd for cmd in parsers if cmd.lower().startswith(first)]
-        return []
-
-    current_parser = parsers[first]
+    if first in parsers:
+        current_parser = parsers[first]
+        words = words[1:]
+    else:
+        return None, (" ".join(words) if words else "") + " " + incomplete
 
     # Traverse nested subparsers based on typed words
-    for w in words[1:]:
+    for w in words:
         sub_action = find_subparsers_action(current_parser)
         if sub_action and w in sub_action.choices:
             current_parser = sub_action.choices[w]
+            words = words[1:]
         else:
             break
 
-    # If the last word is an option expecting a value, suggest its choices
-    last_word = words[-1]
-    if last_word.startswith("-"):
-        action = get_action_for_option(current_parser, last_word)
-        if action and action.choices:
-            if incomplete:
-                return fuzzy_match(
-                    incomplete,
-                    [str(choice) for choice in action.choices],
-                )
-            return [str(choice) for choice in action.choices]
+    return current_parser, (" ".join(words) if words else "") + " " + incomplete
 
-    # Collect available subcommands, options, and positional choices
+
+def update_suggestions(text: str, parsers: dict[str, argparse.ArgumentParser]) -> list[Suggestion]:
+    current_parser, unparsed = find_matching_parser(text, parsers)
+    words, incomplete = parse_input(unparsed)
+    base_line = text[: len(text) - len(incomplete)]
+
+    # No matching parser: suggest top-level commands
+    if current_parser is None:
+        matches = fuzzy_match(incomplete, parsers.keys())
+        return [
+            Suggestion(command=f"{base_line}{match}", description=parsers[match].description or "") for match in matches
+        ]
+    # Check if the last word is an option expecting a value
+    if words:
+        last_word = words[-1]
+        if last_word.startswith("-"):
+            action = get_action_for_option(current_parser, last_word)
+            if action and action.choices:
+                choices = fuzzy_match(incomplete, [str(c) for c in action.choices])
+                return [Suggestion(command=f"{base_line}{c}", description=action.help or "") for c in choices]
+
+    # Gather suggestions from parser
     subcommands = get_subcommands(current_parser)
     options = get_options(current_parser)
-    # Exclude options already used in the input
-    used_flags = {t for t in words if t.startswith("-")}
+    used_flags = {w for w in words if w.startswith("-")}
     options = [opt for opt in options if opt not in used_flags]
-    positional_choices = get_positional_choices(current_parser)
-    positional_choices = fix_template_choices(positional_choices, incomplete, text)
+    positional_choices = fix_template_metavars(get_positional_choices(current_parser), incomplete, text)
 
-    suggestions: list[str] = []
+    # Decide what we're completing
     if incomplete == "":
-        # At a word boundary, suggest all possible next tokens
-        suggestions = fuzzy_match(
-            incomplete,
-            subcommands + options + positional_choices,
-        )
+        tokens = subcommands + options + positional_choices
     elif incomplete.startswith("-"):
-        suggestions = fuzzy_match(incomplete, options)
+        tokens = options
     else:
-        suggestions = fuzzy_match(incomplete, subcommands + positional_choices)
+        tokens = subcommands + positional_choices
 
-    return fuzzy_match(incomplete, set(suggestions))
+    matches = fuzzy_match(incomplete, tokens)
+    suggestions: list[Suggestion] = []
+    for match in matches:
+        full = f"{base_line}{match}"
+        desc = current_parser.description or ""
+        # If it's a subcommand, find its help
+        if match in subcommands:
+            sub_action = find_subparsers_action(current_parser)
+            if sub_action and match in sub_action.choices:
+                desc = sub_action.choices[match].description or ""
+
+        # If it's an option, find its help
+        if match.startswith("-"):
+            action = get_action_for_option(current_parser, match)
+            if action and action.help:
+                desc = action.help
+
+        suggestions.append(Suggestion(command=full, description=desc))
+
+    return suggestions

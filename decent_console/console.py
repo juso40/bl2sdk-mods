@@ -22,8 +22,12 @@ class ESuggestionMode(Enum):
 
 
 COLOR_SUGGESTIONS = (87, 148, 87, 255)  # RGB + Alpha
-COLOR_SUGGESTION_HIGHLIGHT = (32, 220, 111, 255)  # RGB + Alpha
+COLOR_SUGGESTION_HIGHLIGHT = (87, 255, 87, 255)  # RGB + Alpha
+COLOR_DESCRIPTION = (140, 140, 140, 255)  # RGB + Alpha
+COLOR_DESCRIPTION_HIGHLIGHT = (255, 255, 255, 255)  # RGB + Alpha
 PADDING = 14
+PADDING_BORDER = 2
+CONSOLE_PREFIX = "(>"
 
 MAX_SUGGESTIONS = 12
 
@@ -45,43 +49,80 @@ def draw(console: Console, canvas: Canvas, mode: ESuggestionMode) -> None:
 
     if mode == ESuggestionMode.HISTORY:
         suggestions = cast(list[str], console.History)
+        descriptions = [f"Command from History {i}" for i in range(len(suggestions))]
         selected = console.HistoryCur
     else:
-        suggestions = commands.Commands.suggestions
+        suggestions = [cmd.command for cmd in commands.Commands.suggestions]
+        descriptions = [cmd.description.replace("\n", " ")[:240] for cmd in commands.Commands.suggestions]
         selected = commands.Commands.suggestion_index
 
-    # prepare the suggestions area below the console input
-    _, str_len_x, _str_len_y = canvas.StrLen("(>", 0, 0)
-    suggestions_x, suggestions_y = str_len_x, canvas.ClipY * 0.75 + 5
+    # The x and y position where we want to start drawing the suggestions box
+    suggestions_x, suggestions_y = canvas.StrLen(CONSOLE_PREFIX, 0, 0)[1], canvas.ClipY * 0.75 + 5
 
+    # split our commands and descriptions into only the few that are visible
     visible_suggestions, visible_selection = get_visible_suggestions_split(suggestions, selected)
+    visible_descriptions, _ = get_visible_suggestions_split(descriptions, selected)
+    # if we have no suggestions, we don't need to draw anything
     if not visible_suggestions:
         return
-    draw_background_box(console, canvas, visible_suggestions)
 
-    canvas.SetPos(suggestions_x, suggestions_y+2)
+    # calculate the max width that a suggestion and its description can take
+    width_longest_suggestion = max(canvas.StrLen(suggestion, 0, 0)[1] for suggestion in visible_suggestions)
+    max_x = (
+        width_longest_suggestion
+        + max(canvas.StrLen(description, 0, 0)[1] for description in visible_descriptions)
+        + PADDING
+    )
+
+    draw_background_box(console, canvas, max_x, len(visible_suggestions))
+
+    max_x = max(canvas.StrLen(suggestion, 0, 0)[1] for suggestion in visible_suggestions)
+    canvas.SetPos(suggestions_x, suggestions_y + 2)
     canvas.Font = canvas.GetDefaultCanvasFont()
-    for i, suggestion in enumerate(visible_suggestions):
-        draw_suggestion_prepare_next(canvas, suggestion, i == visible_selection)
+    for i, (suggestion, description) in enumerate(zip(visible_suggestions, visible_descriptions, strict=False)):
+        draw_suggestion_prepare_next(
+            canvas,
+            suggestion,
+            description,
+            i == visible_selection,
+            suggestions_x,
+            suggestions_x + PADDING + width_longest_suggestion,
+        )
 
 
-def draw_suggestion_prepare_next(canvas: Canvas, suggestion: str, highlight: bool) -> None:
+def draw_suggestion_prepare_next(
+    canvas: Canvas,
+    suggestion: str,
+    description: str,
+    highlight: bool,
+    x_text: float,
+    x_description: float,
+) -> None:
     canvas.SetDrawColor(*(COLOR_SUGGESTIONS if not highlight else COLOR_SUGGESTION_HIGHLIGHT))
     canvas.SetBGColor(0, 0, 0, 0)
     canvas.DrawTextWithBG(suggestion)
-    _, x, y = canvas.StrLen(suggestion, 0, 0)
-    canvas.CurX -= x
+
+    canvas.CurX = x_description
+    canvas.SetDrawColor(*COLOR_DESCRIPTION if not highlight else COLOR_DESCRIPTION_HIGHLIGHT)
+    canvas.DrawTextWithBG(description, False)
+
+    _, _x, y = canvas.StrLen(suggestion, 0, 0)
+    canvas.CurX = x_text
     canvas.CurY += y
 
 
-def draw_background_box(console: Console, canvas: Canvas, visible_suggestions: list[str]) -> None:
-    max_x = max(canvas.StrLen(suggestion, 0, 0)[1] for suggestion in visible_suggestions)
-    _, str_len_x, str_len_y = canvas.StrLen("(>", 0, 0)
-    canvas.SetPos(str_len_x - 2 - PADDING, canvas.ClipY * 0.75 + 2)
+def draw_background_box(
+    console: Console,
+    canvas: Canvas,
+    max_x: float,
+    num_suggestions: int,
+) -> None:
+    _, str_len_x, str_len_y = canvas.StrLen(CONSOLE_PREFIX, 0, 0)
+    canvas.SetPos(str_len_x - PADDING_BORDER - PADDING, canvas.ClipY * 0.75 + PADDING_BORDER)
     canvas.DrawTile(
         console.DefaultTexture_White,
         max_x + 4 + PADDING * 2,
-        str_len_y * len(visible_suggestions) + 2 + PADDING,
+        str_len_y * num_suggestions + PADDING_BORDER + PADDING,
         0,
         0,
         32,
@@ -89,11 +130,11 @@ def draw_background_box(console: Console, canvas: Canvas, visible_suggestions: l
         lcol(0, 255, 0, 255),
     )
 
-    canvas.SetPos(str_len_x - PADDING, canvas.ClipY * 0.75 + 2)
+    canvas.SetPos(str_len_x - PADDING, canvas.ClipY * 0.75 + PADDING_BORDER)
     canvas.DrawTile(
         console.DefaultTexture_White,
         max_x + PADDING * 2,
-        str_len_y * len(visible_suggestions) + PADDING,
+        str_len_y * num_suggestions + PADDING,
         0,
         0,
         32,

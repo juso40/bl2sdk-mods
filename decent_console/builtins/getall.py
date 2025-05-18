@@ -11,13 +11,13 @@ def getall_cmd(_arg: Namespace) -> None:
 getall_cmd.add_argument(
     "ClassName",
     type=str,
-    choices=["$ClassName"],
+    metavar="$ClassName",
 )
 
 getall_cmd.add_argument(
     "PropertyName",
     type=str,
-    choices=["$PropertyName"],
+    metavar="$PropertyName",
 )
 
 getall_cmd.add_argument(
@@ -29,5 +29,5 @@ getall_cmd.add_argument(
     "Outer=OuterObject",
     nargs="?",
     type=str,
-    choices=["Outer=$PathName"],
+    metavar="Outer=$PathName",
 )

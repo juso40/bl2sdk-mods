@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class Commands:
     argparse_commands: ClassVar[list[ArgumentParser]] = [rlm.parser]
-    suggestions: ClassVar[list[str]] = []
+    suggestions: ClassVar[list[suggestions.Suggestion]] = []
     suggestion_index: int = 0
 
 
@@ -102,29 +102,23 @@ def ctrl_right(text: str, cursor: int) -> int:
 
 def update_suggestions(text: str) -> None:
     _sugg = suggestions.update_suggestions(text, {x.prog: x for x in Commands.argparse_commands})
+    if _sugg != Commands.suggestions:
+        Commands.suggestion_index = 0
     Commands.suggestions = _sugg
 
 
 def accept_suggestion(console: Console) -> None:
     if not Commands.suggestions:
         return
-    
+
     if Commands.suggestion_index >= len(Commands.suggestions):
         Commands.suggestion_index = 0
         return
-    
+
     completion_suggestion = Commands.suggestions[Commands.suggestion_index]
 
-    text = console.TypedStr
-    parts = text.split(" ")
-    parts[-1] = completion_suggestion
-    curr_text = " ".join(parts)
-
-    
-    console.SetInputText(curr_text)
+    console.SetInputText(completion_suggestion.command)
     console.TypedStrPos = len(console.TypedStr)
-
-    update_suggestions("")
 
 
 def suggestions_change(direction: int) -> None:

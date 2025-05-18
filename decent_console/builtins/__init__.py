@@ -15,3 +15,4 @@ for _, module_name, _ in iter_modules([builtins]):
         attribute = getattr(module, attr_name)
         if isinstance(attribute, ArgParseCommand):
             commands.append(attribute)
+# https://github.com/ikrima/gamedevguide/blob/master/docs/ue4guide/gameplay-programming/useful-console-commands/udk-console-commands.md

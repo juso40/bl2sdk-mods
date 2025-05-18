@@ -3,7 +3,7 @@ from argparse import Namespace
 from mods_base import command
 
 
-@command("stat", add_help=False)
+@command("stat", description="Show statistics on screen", add_help=False)
 def stat_cmd(_arg: Namespace) -> None:
     pass
 stat_cmd.add_argument(

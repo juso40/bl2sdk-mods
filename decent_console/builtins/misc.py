@@ -65,3 +65,15 @@ def say_cmd(_arg: Namespace) -> None:
 @command("disconnect", description="Disconnect from the server", add_help=False)
 def disconnect_cmd(_arg: Namespace) -> None:
     pass
+
+@command("start", description="Open a new map, takes either URL or Package, fully commits", add_help=False)
+def start_cmd(_arg: Namespace) -> None:
+    pass
+
+@command("open", description="Open a new map, takes either URL or Package", add_help=False)
+def open_cmd(_arg: Namespace) -> None:
+    pass
+
+@command("streammap", description="Stream a new map, takes either URL or Package", add_help=False)
+def streammap_cmd(_arg: Namespace) -> None:
+    pass

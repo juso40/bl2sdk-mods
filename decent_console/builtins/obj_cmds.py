@@ -12,17 +12,17 @@ cmd_parser = obj_cmd.parser.add_subparsers(dest="command", required=True)
 obj_cmd.parser.add_argument(
     "command",
     type=str,
-    choices=["dump", "classes", "refs", "list"],
 )
 
 obj_dump = cmd_parser.add_parser(
     "dump",
+    description="Dump all variable values for the specified object",
     add_help=False,
 )
 obj_dump.add_argument(
     "Object",
     type=str,
-    choices=["$PathName"],
+    metavar="$PathName",
 )
 
 obj_classes = cmd_parser.add_parser(
@@ -39,7 +39,7 @@ obj_refs = cmd_parser.add_parser(
 obj_refs.add_argument(
     "Name",
     type=str,
-    choices=["Name=$PathName"],
+    metavar="Name=$PathName",
 )
 
 obj_list = cmd_parser.add_parser(
@@ -51,32 +51,32 @@ obj_list.add_argument(
     "Class",
     nargs="?",
     type=str,
-    choices=["Class=$ClassName"],
+    metavar="Class=$ClassName",
 )
 
 obj_list.add_argument(
     "Type",
     nargs="?",
     type=str,
-    choices=["Type=$ClassName"],
+    metavar="Type=$ClassName",
 )
 obj_list.add_argument(
     "Outer",
     nargs="?",
     type=str,
-    choices=["Outer=$PathName"],
+    metavar="Outer=$PathName",
 )
 obj_list.add_argument(
     "Package",
     nargs="?",
     type=str,
-    choices=["Package=$PathName"],
+    metavar="Package=$PathName",
 )
 obj_list.add_argument(
     "Inside",
     nargs="?",
     type=str,
-    choices=["Inside=$PathName"],
+    metavar="Inside=$PathName",
 )
 
 obj_dependencies = cmd_parser.add_parser(
@@ -88,7 +88,7 @@ obj_dependencies.add_argument(
     "Package",
     nargs="?",
     type=str,
-    choices=["Package=$PathName"],
+    metavar="Package=$PathName",
 )
 
 obj_garbage = cmd_parser.add_parser(
@@ -101,4 +101,15 @@ obj_hash = cmd_parser.add_parser(
     "hash",
     description="Show object hashing information",
     add_help=False,
+)
+
+obj_flags = cmd_parser.add_parser(
+    "flags",
+    description="Show object flags",
+    add_help=False,
+)
+obj_flags.add_argument(
+    "Name",
+    type=str,
+    metavar="$PathName",
 )
