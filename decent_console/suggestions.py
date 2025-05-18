@@ -117,11 +117,11 @@ def path_name_choices(template: str, incomplete: str) -> list[str]:
             choices.extend(
                 fuzzy_match(
                     incomplete,
-                    {package._path_name() for package in find_all("Package", exact=False) if package.Outer == outer},
+                    {package._path_name() for package in find_all("Object", exact=False) if package.Outer == outer},
                 ),
             )
 
-    return [f"{template.replace('$PathName', choice)}" for choice in choices]
+    return [template.replace("$PathName", choice) for choice in choices]
 
 
 def class_name_choices(template: str, incomplete: str) -> list[str]:
@@ -170,7 +170,6 @@ def fix_template_metavars(choices: list[str], incomplete: str, line: str) -> lis
             fixed_choices.append(choice)
 
     return fixed_choices
-
 
 
 def find_matching_parser(

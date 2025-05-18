@@ -3,7 +3,7 @@ from argparse import Namespace
 from mods_base import command
 
 
-@command("getall", add_help=False)
+@command("getall", description="Returns the value property for all instantiated classes", add_help=False)
 def getall_cmd(_arg: Namespace) -> None:
     pass
 
