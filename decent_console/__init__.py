@@ -9,6 +9,13 @@ from unrealsdk.hooks import Block, Type
 
 from . import commands, console
 
+try:
+    from legacy_compat import legacy_compat
+
+    HAS_LEGACY_COMPAT = True
+except ImportError:
+    HAS_LEGACY_COMPAT = False
+
 if TYPE_CHECKING:
     from common import Canvas, Console
 
@@ -105,6 +112,8 @@ def post_render_console(
     _ret: Any,
     _func: unreal.BoundFunction,
 ) -> None:
+    if HAS_LEGACY_COMPAT and legacy_compat.currently_active:
+        return
     uconsole = cast("Console", obj)
     if (
         time() - State.last_input_time > DEBOUNCE_TIME
@@ -139,6 +148,7 @@ def input_char(
         State.current_mode = console.ESuggestionMode.SUGGESTIONS
     return None
 
+
 @hook("Engine.Console:Open.BeginState", Type.POST_UNCONDITIONAL)
 def open_console(
     _obj: unreal.UObject,
@@ -147,5 +157,6 @@ def open_console(
     _func: unreal.BoundFunction,
 ) -> None:
     State.current_mode = console.ESuggestionMode.NONE
+
 
 mod = build_mod()

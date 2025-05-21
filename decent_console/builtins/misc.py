@@ -66,14 +66,29 @@ def say_cmd(_arg: Namespace) -> None:
 def disconnect_cmd(_arg: Namespace) -> None:
     pass
 
+
 @command("start", description="Open a new map, takes either URL or Package, fully commits", add_help=False)
 def start_cmd(_arg: Namespace) -> None:
     pass
+
 
 @command("open", description="Open a new map, takes either URL or Package", add_help=False)
 def open_cmd(_arg: Namespace) -> None:
     pass
 
+
 @command("streammap", description="Stream a new map, takes either URL or Package", add_help=False)
 def streammap_cmd(_arg: Namespace) -> None:
     pass
+
+
+@command("camera", description="Switch between 1st and 3rd person camera.", add_help=False)
+def camera_cmd(_arg: Namespace) -> None:
+    pass
+
+
+camera_cmd.add_argument(
+    "option",
+    choices=["1st", "3rd"],
+    help="Switch between 1st and 3rd person camera.",
+)
