@@ -1,4 +1,4 @@
-from mods_base import ModType, build_mod
+from mods_base import Library, build_mod
 
 from tweens.easing import (
     back_in,
@@ -73,4 +73,4 @@ __all__ = [
 ]
 
 
-mod = build_mod(mod_type=ModType.Library)
+mod = build_mod(cls=Library)

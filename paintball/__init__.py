@@ -17,7 +17,9 @@ colors = [
 decal_map = {}
 
 replace_particles = options.BoolOption(
-    "Confetti Particles", True, description="Replace the explosion particles with confetti particles."
+    "Confetti Particles",
+    True,
+    description="Replace the explosion particles with confetti particles.",
 )
 
 
