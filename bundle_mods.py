@@ -1,4 +1,5 @@
 import zipfile
+from argparse import ArgumentParser
 from pathlib import Path
 
 FILE_EXTENSION = ".sdkmod"
@@ -19,7 +20,10 @@ def get_mod_dirs() -> list[Path]:
 
 def create_mod_zip(mod_dir: Path) -> None:
     with zipfile.ZipFile(
-        mod_dir / mod_dir.with_suffix(FILE_EXTENSION), "w", zipfile.ZIP_DEFLATED, compresslevel=9
+        mod_dir / mod_dir.with_suffix(FILE_EXTENSION),
+        "w",
+        zipfile.ZIP_DEFLATED,
+        compresslevel=9,
     ) as zf:
         for child in mod_dir.rglob("*"):
             if (
@@ -38,4 +42,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    argparser = ArgumentParser(description="Bundle mod folders into .sdkmod files")
+    argparser.add_argument("-d", "--directory", type=Path, default=None, help="Single mod folder to bundle")
+    args = argparser.parse_args()
+    if args.directory:
+        if not args.directory.is_dir():
+            raise ValueError(f"{args.directory} is not a valid directory")
+        create_mod_zip(args.directory)
+    else:
+        print("Bundling all mod folders in the current directory...")
+        main()
