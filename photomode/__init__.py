@@ -15,6 +15,7 @@ MAX_RES_X: int = 9999
 
 
 class PhotoModeState:
+    in_photo_mode: bool = False
     pawn_backup: WeakPointer = WeakPointer()
     active_modifier: Callable[[int], None] | None = None
 
@@ -31,16 +32,20 @@ def toggle_photo_mode() -> None:
         world_info.bPlayersOnly = False
         pc.Rotation.Roll = 0
         pc.SetFOV(pc.DefaultFOV)
+        PhotoModeState.in_photo_mode = False
     else:
         PhotoModeState.pawn_backup = WeakPointer(pc.Pawn)
         pc.Unpossess()
         pc.HideHUD()
         pc.ServerSpectate()
         world_info.bPlayersOnly = True
+        PhotoModeState.in_photo_mode = True
 
 
 @keybind("Highres Screenshot", "Enter", description="Take a high-resolution screenshot")
 def take_highres_screenshot() -> None:
+    if not PhotoModeState.in_photo_mode:
+        return
     canvas = list(find_all("Canvas"))[-1]
     x: int = canvas.SizeX
     scale = max(ceil(MAX_RES_X / x), 1)
@@ -85,7 +90,7 @@ def _switch_modifier(event: EInputEvent, mod: Callable[[int], None]) -> None:
 
 
 def _modifier(val: int) -> None:
-    if PhotoModeState.active_modifier:
+    if PhotoModeState.active_modifier and PhotoModeState.in_photo_mode:
         PhotoModeState.active_modifier(val)
 
 
