@@ -19,7 +19,7 @@ def magic_trace_weapon() -> WillowWeapon:
     @cache
     def create_gun() -> unreal.WeakPointer[WillowWeapon]:
         pc = cast("WillowPlayerController", get_pc())
-        weap = cast("WillowWeapon", pc.Spawn(cast(type["Actor"], find_class("WillowWeapon"))))
+        weap = cast("WillowWeapon", pc.Spawn(cast("WillowWeapon", find_class("WillowWeapon"))))
         return unreal.WeakPointer(weap)
 
     if wp := create_gun()():
