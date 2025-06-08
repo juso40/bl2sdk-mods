@@ -8,7 +8,10 @@ import blimgui
 We need to import blimgui first, as it adds imgui_bundle to the path.
 """
 from imgui_bundle import icons_fontawesome_4 as icons
-from imgui_bundle import imgui, imgui_md
+from imgui_bundle import (
+    imgui,
+    imgui_md,  # type: ignore
+)
 from mods_base import ENGINE, build_mod, get_pc, hook, keybind
 from unrealsdk import find_all, find_object, hooks, unreal
 
