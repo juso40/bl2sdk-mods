@@ -68,7 +68,7 @@ class BackpackProxy:
             )
             inventory_manager.ClientAddWeaponToBackpack(weap_def_data, EPlayerMark.PM_Standard, False)
         else:
-            item = cast("WillowInventory", pc.Spawn(cast(type["WillowInventory"], unrealsdk.find_class(item_class))))
+            item = cast("WillowInventory", pc.Spawn(cast("WillowInventory", unrealsdk.find_class(item_class))))
             item.Quantity = 1
             inventory_manager.AddInventoryToBackpack(item)
         self.update()
