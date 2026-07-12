@@ -169,10 +169,19 @@ class Rotator:
         x.normalize()
         y.normalize()
         z.normalize()
-        pitch = -int(m.asin(z.y) * RADIANS_TO_URU)
-        roll = -int(m.atan2(z.x, z.z) * RADIANS_TO_URU)
-        yaw = -int(m.atan2(y.x, x.x) * RADIANS_TO_URU)
-        return Rotator((pitch, yaw, roll))
+
+        pitch = int(m.asin(max(-1.0, min(1.0, x.z))) * RADIANS_TO_URU)
+        yaw = int(m.atan2(x.y, x.x) * RADIANS_TO_URU)
+
+        basic = Rotator(pitch=pitch, yaw=yaw, roll=0)
+        _, _, expected_up = basic.get_axes()
+
+        cos_roll = max(-1.0, min(1.0, z.dot(expected_up)))
+        roll_angle = m.acos(cos_roll)
+        sign = 1.0 if z.cross(expected_up).dot(x) > 0 else -1.0
+        roll = int(sign * roll_angle * RADIANS_TO_URU)
+
+        return Rotator(pitch=pitch, yaw=yaw, roll=roll)
 
     def look_at(self, target: v.Vector) -> Rotator:
         """Get the Rotator needed to look at a target Global Location."""
