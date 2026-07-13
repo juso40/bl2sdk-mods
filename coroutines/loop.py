@@ -9,6 +9,8 @@ import unrealsdk
 from unrealsdk.hooks import Type, add_hook
 from unrealsdk.unreal import WeakPointer
 
+from mods_base import Game
+
 from coroutines.gametime import Time
 
 if TYPE_CHECKING:
@@ -187,9 +189,17 @@ add_hook(
     "coroutines_post_render",
     _post_render,
 )
-add_hook(
-    "WillowGame.WillowGameViewportClient:Tick",
-    Type.POST_UNCONDITIONAL,
-    "coroutines_tick_frame",
-    _tick,
-)
+if Game.get_current() == Game.BL1:
+    add_hook(
+        "Engine.GameViewportClient:Tick",
+        Type.POST_UNCONDITIONAL,
+        "coroutines_tick_frame",
+        _tick,
+    )
+else:
+    add_hook(
+        "WillowGame.WillowGameViewportClient:Tick",
+        Type.POST_UNCONDITIONAL,
+        "coroutines_tick_frame",
+        _tick,
+    )
