@@ -10,4 +10,4 @@ A mod for loading custom maps in the game.
 [tool.sdkmod]
 name = "maploader"
 license = {name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
-download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/maploader/maploader.sdkmod"
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/maploader/maploader.zip"
