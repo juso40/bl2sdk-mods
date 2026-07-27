@@ -2,11 +2,11 @@ from collections.abc import Callable
 from functools import partial
 from math import ceil
 
-from mods_base import ENGINE, UObject, build_mod, get_pc
+from mods_base import ENGINE, build_mod, get_pc
 from mods_base.keybinds import EInputEvent, keybind
 from ui_utils import show_chat_message
 from unrealsdk import find_all
-from unrealsdk.unreal import WeakPointer
+from unrealsdk.unreal import UObject, WeakPointer
 
 __version__: str
 __version_info__: tuple[int, ...]
