@@ -5,7 +5,10 @@ authors = [{ name = "juso" }, { name = "mopioid" }]
 description = """\
 Instantly jump to the main menu, skips all intro and loading screens.
 
-Optionally allows you to immediately load into a character after startup.
+Optionally allows you to immediately load into a character after startup. This can be configured in the mod's options, or via a launch argument:
+-Character="<name>"
+-Character="<file name>"
+-Character="<guid>"
 
 Offline Helpers mod is recommended if using the safe mode option for faster loading.
 
