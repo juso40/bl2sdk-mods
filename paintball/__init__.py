@@ -71,7 +71,7 @@ def spawn_decal(
     args: unreal.WrappedStruct,
     _ret: Any,
     _func: unreal.BoundFunction,
-) -> None | tuple[type[Block], Any] | type[Block]:
+) -> tuple[type[Block], Any] | type[Block] | None:
     mic = args.NewDecalMaterial
     if mic.Class.Name == "MaterialInstanceTimeVarying":
         set_varying(mic)
@@ -94,7 +94,7 @@ def set_emitter_template(
     args: unreal.WrappedStruct,
     _ret: Any,
     _func: unreal.BoundFunction,
-) -> None | tuple[type[Block], Any] | type[Block]:
+) -> tuple[type[Block], Any] | type[Block] | None:
     if not replace_particles.value:
         return None
     if "FX_WEP_Explosions.Particles" in str(args.NewTemplate):
