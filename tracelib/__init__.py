@@ -31,13 +31,15 @@ def magic_trace_weapon() -> WillowWeapon:
 def trace_from_player_pov(debug_trace: bool = False) -> Actor.ImpactInfo:
     """Returns the ImpactInfo of the current trace, starting from the players pov."""
     pc = cast("WillowPlayerController", get_pc())
+    trace_start: Object.Vector = pc.Location
     try:
-        trace_start: Object.Vector = cast("Object.Vector", make_struct("Vector"))
+        trace_start = cast("Object.Vector", make_struct("Vector"))
         trace_start.X = pc.Pawn.Location.X
         trace_start.Y = pc.Pawn.Location.Y
         trace_start.Z = pc.Pawn.Location.Z + pc.Pawn.EyeHeight
     except AttributeError:
-        trace_start: Object.Vector = pc.Location
+        pass
+
 
     forward = uemath.Vector(pc.Rotation) * 50
     trace_start = (uemath.Vector(trace_start) + forward).to_ue_vector()

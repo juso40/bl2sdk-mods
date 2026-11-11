@@ -2,8 +2,10 @@
 *.so
 *.zip
 
+.zed
 .vs
 .vscode
+.ruff_cache
 
 
 # Byte-compiled / optimized / DLL files

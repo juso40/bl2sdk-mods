@@ -4,9 +4,6 @@ from pathlib import Path
 
 FILE_EXTENSION = ".sdkmod"
 
-print(Path().absolute())
-
-
 def get_mod_dirs() -> list[Path]:
     mod_dirs = []
     for path in Path().iterdir():
