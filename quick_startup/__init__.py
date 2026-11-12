@@ -16,7 +16,8 @@ character_arg = commandline.get_character_arg()
 @hook("WillowGame.WillowGameViewportClient:Tick", Type.POST_UNCONDITIONAL, immediately_enable=True)
 def hook_skip_to_main_menu(_1, _2, _3, _4) -> None:  # noqa: ANN001
     for obj in find_all("WillowGame.WillowGFxMoviePressStart"):
-        if obj.ObjectFlags & (0x400 | 0x200):
+        # int(): while a legacy mod loads, legacy_compat swaps ObjectFlags for a proxy object
+        if int(obj.ObjectFlags) & (0x400 | 0x200):
             continue
         if options.quick_mode.value:
             obj.BeginStartupProcess()
