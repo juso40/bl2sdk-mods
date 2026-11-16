@@ -1,0 +1,12 @@
+[project]
+name = "animlib"
+version = "1.0.0"
+authors = [{ name = "juso" }]
+description = "Helper library for working with AnimSets and AnimSequences loaded by meshloader."
+dependencies = ["meshloader"]
+
+[tool.sdkmod]
+name = "AnimLib"
+supported_games = ["BL2"]
+coop_support = "ClientSide"
+license = { name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
