@@ -10,3 +10,4 @@ name = "AnimLib"
 supported_games = ["BL2"]
 coop_support = "ClientSide"
 license = { name = "MIT", url = "https://choosealicense.com/licenses/mit/" }
+download = "https://github.com/juso40/bl2sdk-mods/raw/refs/heads/main/animlib/animlib.sdkmod"
